@@ -1,0 +1,195 @@
+{
+  "home": {
+    "title": "Ghana Commodity Exchange",
+    "subtitle": "Connecting Markets, Connecting People, Fostering Opportunities",
+    "hero": {
+      "title": "Ghana's Premier Commodity Exchange",
+      "subtitle": "Empowering agricultural trade with transparent pricing, secure settlements, and market access for farmers and traders across Ghana",
+      "cta": {
+        "startTrading": "Start Trading",
+        "learnMore": "Learn More",
+        "viewPlatform": "View Platform",
+        "joinAsFarmer": "Join as Farmer"
+      },
+      "features": {
+        "title": "Platform Features",
+        "realTimeData": {
+          "title": "Real-time Data",
+          "description": "Live market updates"
+        },
+        "advancedAnalytics": {
+          "title": "Advanced Analytics",
+          "description": "Professional charts & tools"
+        },
+        "secureExecution": {
+          "title": "Secure Execution",
+          "description": "Bank-grade security"
+        }
+      }
+    },
+    "partners": {
+      "title": "Our Trusted Partners",
+      "subtitle": "Working together to transform Ghana's agricultural sector",
+      "cta": {
+        "viewAll": "View All Partners",
+        "becomePartner": "Partner With Us"
+      }
+    },
+    "whyJoin": {
+      "title": "Why Join The Ghana Commodity Exchange?",
+      "subtitle": "Connecting Markets, Connecting People, Providing Opportunities",
+      "whatIsGcx": {
+        "title": "What is GCX?",
+        "description": "Simply put, GCX is a marketplace or a platform for buying and selling listed commodities. Starting with spot contracts for physical products, GCX will later trade in futures and options contracts for the listed commodities."
+      },
+      "benefitsToMembers": {
+        "title": "Benefits to Members",
+        "description": "As a member, you gain access to a wide range of market actors (buyers and sellers) thereby creating opportunities for you to increase your revenue stream in a simplified manner, and without risk."
+      },
+      "benefitsToSociety": {
+        "title": "Benefits to Society",
+        "description": "Apart from job creation, agricultural economic transformation will occur through the myriad of opportunities for value chain actors to achieve high levels of sustainable and equitable growth, from farmers who receive a premium on quality grains to traders who are guaranteed the right quality, with cash and contract settlement within a few days."
+      }
+    },
+    "statistics": {
+      "activeMembers": "Active Members",
+      "tradingVolume": "Trading Volume",
+      "commoditiesListed": "Commodities Listed",
+      "marketCap": "Market Cap"
+    },
+    "hero": {
+      "title": "Ghana's Premier Commodity Exchange",
+      "subtitle": "Connecting markets, empowering traders, and driving Ghana's agricultural transformation through innovative trading solutions.",
+      "cta": {
+        "startTrading": "Start Trading Today",
+        "learnMore": "Learn More",
+        "viewPlatform": "View Market Data",
+        "joinAsFarmer": "Join as Farmer"
+      },
+      "features": {
+        "title": "Platform Features",
+        "realTimeData": {
+          "title": "Real-time Data",
+          "description": "Live market updates"
+        },
+        "advancedAnalytics": {
+          "title": "Advanced Analytics",
+          "description": "Professional charts & tools"
+        },
+        "secureExecution": {
+          "title": "Secure Execution",
+          "description": "Bank-grade security"
+        }
+      }
+    }
+  },
+  "about": {
+    "title": "About GCX",
+    "subtitle": "Learn about Ghana Commodity Exchange and our mission to transform agricultural trade",
+    "mission": {
+      "title": "Our Mission",
+      "content": "To provide a transparent, efficient, and secure platform for commodity trading that empowers farmers, traders, and all stakeholders in Ghana's agricultural sector."
+    },
+    "vision": {
+      "title": "Our Vision",
+      "content": "To become the leading commodity exchange in West Africa, driving agricultural transformation and economic growth through innovative trading solutions."
+    },
+    "values": {
+      "title": "Our Values",
+      "transparency": "Transparency",
+      "integrity": "Integrity",
+      "innovation": "Innovation",
+      "excellence": "Excellence",
+      "collaboration": "Collaboration"
+    }
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Comprehensive trading and market solutions for Ghana's agricultural sector",
+    "trading": {
+      "title": "Trading Services",
+      "description": "Access our advanced trading platform with real-time pricing and secure execution."
+    },
+    "marketData": {
+      "title": "Market Data",
+      "description": "Get comprehensive market insights, price charts, and trading statistics."
+    },
+    "certification": {
+      "title": "Certification",
+      "description": "Quality assurance and certification services for agricultural commodities."
+    },
+    "consulting": {
+      "title": "Consulting",
+      "description": "Expert advice on commodity trading, risk management, and market strategies."
+    }
+  },
+  "membership": {
+    "title": "Membership",
+    "subtitle": "Choose the membership type that suits your trading needs",
+    "types": {
+      "tradingMember": {
+        "title": "Trading Member",
+        "description": "Buy and sell all commodities for self only",
+        "requirements": "Requirements:",
+        "netWorth": "GHC 50,000 Net Worth",
+        "registration": "Company Registration",
+        "more": "+1 more"
+      },
+      "brokerMember": {
+        "title": "Broker Member",
+        "description": "Trade for self and clients with full settlement rights",
+        "requirements": "Requirements:",
+        "netWorth": "GHC 80,000 Net Worth",
+        "registration": "Company Registration",
+        "more": "+1 more"
+      },
+      "associateMember": {
+        "title": "Associate Member",
+        "description": "Special membership for smallholder farmers and traders",
+        "requirements": "Requirements:",
+        "businessRegistration": "Business Registration",
+        "tinNumber": "TIN Number",
+        "more": "+1 more"
+      },
+      "institutionalMember": {
+        "title": "Institutional Member",
+        "description": "For non-commercial organizations providing services",
+        "requirements": "Requirements:",
+        "companyRegistration": "Company Registration",
+        "auditReport": "Audit Report",
+        "more": "+1 more"
+      }
+    },
+    "cta": {
+      "title": "Ready to Start Trading?",
+      "description": "Join thousands of traders and institutions already benefiting from GCX membership. Get access to transparent pricing, secure settlements, and market opportunities.",
+      "learnMore": "Learn More About Membership",
+      "applyNow": "Apply Now"
+    },
+    "stats": {
+      "activeMembers": "Active Members",
+      "tradingVolume": "Trading Volume",
+      "availability": "24/7"
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Get in touch with the Ghana Commodity Exchange team",
+    "form": {
+      "name": "Full Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "company": "Company",
+      "subject": "Subject",
+      "message": "Message",
+      "submit": "Send Message",
+      "required": "This field is required"
+    },
+    "info": {
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email",
+      "hours": "Business Hours"
+    }
+  }
+}

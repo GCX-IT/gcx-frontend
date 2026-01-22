@@ -1,0 +1,177 @@
+{
+  "general": {
+    "title": "Error",
+    "message": "An unexpected error occurred",
+    "retry": "Try Again",
+    "goHome": "Go to Home",
+    "contactSupport": "Contact Support"
+  },
+  "http": {
+    "400": {
+      "title": "Bad Request",
+      "message": "The request was invalid or cannot be served"
+    },
+    "401": {
+      "title": "Unauthorized",
+      "message": "You need to be logged in to access this page"
+    },
+    "403": {
+      "title": "Forbidden",
+      "message": "You don't have permission to access this resource"
+    },
+    "404": {
+      "title": "Page Not Found",
+      "message": "The page you're looking for doesn't exist"
+    },
+    "405": {
+      "title": "Method Not Allowed",
+      "message": "The request method is not allowed"
+    },
+    "408": {
+      "title": "Request Timeout",
+      "message": "The request took too long to complete"
+    },
+    "409": {
+      "title": "Conflict",
+      "message": "There was a conflict with the current state"
+    },
+    "422": {
+      "title": "Validation Error",
+      "message": "The data you provided is invalid"
+    },
+    "429": {
+      "title": "Too Many Requests",
+      "message": "You've made too many requests. Please try again later"
+    },
+    "500": {
+      "title": "Internal Server Error",
+      "message": "Something went wrong on our end. Please try again later"
+    },
+    "502": {
+      "title": "Bad Gateway",
+      "message": "The server is temporarily unavailable"
+    },
+    "503": {
+      "title": "Service Unavailable",
+      "message": "The service is temporarily unavailable"
+    },
+    "504": {
+      "title": "Gateway Timeout",
+      "message": "The server took too long to respond"
+    }
+  },
+  "network": {
+    "offline": {
+      "title": "You're Offline",
+      "message": "Please check your internet connection and try again"
+    },
+    "timeout": {
+      "title": "Connection Timeout",
+      "message": "The connection timed out. Please try again"
+    },
+    "dns": {
+      "title": "DNS Error",
+      "message": "Unable to resolve the server address"
+    }
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "phone": "Please enter a valid phone number",
+    "url": "Please enter a valid URL",
+    "numeric": "Please enter a valid number",
+    "integer": "Please enter a whole number",
+    "decimal": "Please enter a decimal number",
+    "min": "Value must be at least {min}",
+    "max": "Value must be no more than {max}",
+    "minLength": "Must be at least {min} characters long",
+    "maxLength": "Must be no more than {max} characters long",
+    "pattern": "Please enter a valid format",
+    "unique": "This value is already taken",
+    "exists": "This value does not exist",
+    "confirmed": "Values do not match",
+    "accepted": "You must accept this field",
+    "date": "Please enter a valid date",
+    "time": "Please enter a valid time",
+    "datetime": "Please enter a valid date and time",
+    "before": "Date must be before {date}",
+    "after": "Date must be after {date}",
+    "between": "Value must be between {min} and {max}",
+    "in": "Value must be one of: {values}",
+    "notIn": "Value must not be one of: {values}",
+    "alpha": "Must contain only letters",
+    "alphaNumeric": "Must contain only letters and numbers",
+    "alphaDash": "Must contain only letters, numbers, dashes and underscores",
+    "file": "Please select a valid file",
+    "image": "Please select a valid image file",
+    "mimes": "File must be one of the following types: {types}",
+    "size": "File size must be less than {size}",
+    "dimensions": "Image dimensions must be {width}x{height}"
+  },
+  "auth": {
+    "login": {
+      "title": "Login Failed",
+      "invalidCredentials": "Invalid email or password",
+      "accountLocked": "Account is locked. Please contact support",
+      "accountDisabled": "Account is disabled. Please contact support",
+      "emailNotVerified": "Please verify your email address before logging in",
+      "tooManyAttempts": "Too many login attempts. Please try again later"
+    },
+    "register": {
+      "title": "Registration Failed",
+      "emailExists": "An account with this email already exists",
+      "usernameExists": "This username is already taken",
+      "weakPassword": "Password is too weak",
+      "termsNotAccepted": "You must accept the terms and conditions"
+    },
+    "password": {
+      "title": "Password Error",
+      "currentIncorrect": "Current password is incorrect",
+      "resetFailed": "Password reset failed",
+      "resetExpired": "Password reset link has expired",
+      "resetInvalid": "Invalid password reset link"
+    },
+    "session": {
+      "title": "Session Error",
+      "expired": "Your session has expired. Please log in again",
+      "invalid": "Invalid session. Please log in again",
+      "concurrent": "Another session is active. Please log out and try again"
+    }
+  },
+  "permissions": {
+    "title": "Access Denied",
+    "insufficientPermissions": "You don't have sufficient permissions to perform this action",
+    "roleRequired": "This action requires a specific role",
+    "featureDisabled": "This feature is currently disabled",
+    "maintenanceMode": "The system is in maintenance mode"
+  },
+  "file": {
+    "title": "File Error",
+    "uploadFailed": "File upload failed",
+    "downloadFailed": "File download failed",
+    "notFound": "File not found",
+    "tooLarge": "File is too large",
+    "invalidType": "Invalid file type",
+    "corrupted": "File appears to be corrupted",
+    "permissionDenied": "Permission denied to access this file"
+  },
+  "database": {
+    "title": "Database Error",
+    "connectionFailed": "Unable to connect to database",
+    "queryFailed": "Database query failed",
+    "constraintViolation": "Data constraint violation",
+    "duplicateEntry": "Duplicate entry found",
+    "foreignKeyViolation": "Referenced record does not exist"
+  },
+  "api": {
+    "title": "API Error",
+    "rateLimited": "API rate limit exceeded",
+    "invalidRequest": "Invalid API request",
+    "unauthorized": "API key is invalid or missing",
+    "forbidden": "API access is forbidden",
+    "notFound": "API endpoint not found",
+    "methodNotAllowed": "HTTP method not allowed for this endpoint",
+    "serverError": "API server error",
+    "timeout": "API request timeout"
+  }
+}

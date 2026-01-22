@@ -1,0 +1,37 @@
+{
+  "home": {
+    "title": "Ghana Commodity Exchange",
+    "subtitle": "Connecting Markets, Connecting People, Fostering Opportunities",
+    "hero": {
+      "title": "Bolsa de Productos Básicos Premier de Ghana",
+      "subtitle": "Conectando mercados, empoderando comerciantes y impulsando la transformación agrícola de Ghana a través de soluciones comerciales innovadoras.",
+      "cta": {
+        "startTrading": "Comenzar a Comerciar Hoy",
+        "learnMore": "Aprender Más",
+        "viewPlatform": "Ver Datos del Mercado",
+        "joinAsFarmer": "Unirse como Agricultor"
+      },
+      "features": {
+        "title": "Características de la Plataforma",
+        "realTimeData": {
+          "title": "Datos en Tiempo Real",
+          "description": "Actualizaciones del mercado en vivo"
+        },
+        "advancedAnalytics": {
+          "title": "Análisis Avanzado",
+          "description": "Gráficos y herramientas profesionales"
+        },
+        "secureExecution": {
+          "title": "Ejecución Segura",
+          "description": "Seguridad de nivel bancario"
+        }
+      }
+    },
+    "statistics": {
+      "activeMembers": "Miembros Activos",
+      "tradingVolume": "Volumen de Comercio Total",
+      "commoditiesListed": "Productos Básicos Listados",
+      "marketCap": "Capitalización de Mercado"
+    }
+  }
+}

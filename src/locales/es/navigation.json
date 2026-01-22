@@ -1,0 +1,87 @@
+{
+  "menu": {
+    "home": "Inicio",
+    "about": "Acerca de",
+    "services": "Servicios",
+    "membership": "Membresía",
+    "marketData": "Datos de Mercado",
+    "resources": "Recursos",
+    "media": "Medios",
+    "contact": "Contacto",
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "dashboard": "Panel de Control",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "admin": "Administrador"
+  },
+  "about": {
+    "title": "Acerca de",
+    "aboutGcx": "Acerca de GCX",
+    "mission": "Misión",
+    "vision": "Visión y Propósito",
+    "leadership": "Liderazgo",
+    "partnership": "Asociación",
+    "boardOfDirectors": "Junta Directiva",
+    "executiveManagement": "Gerencia Ejecutiva",
+    "functionalHeads": "Jefes Funcionales"
+  },
+  "services": {
+    "title": "Servicios",
+    "trading": "Trading",
+    "marketData": "Datos de Mercado",
+    "certification": "Certificación",
+    "consulting": "Consultoría",
+    "training": "Capacitación",
+    "support": "Soporte"
+  },
+  "membership": {
+    "title": "Membresía",
+    "types": "Tipos de Membresía",
+    "benefits": "Beneficios",
+    "requirements": "Requisitos",
+    "application": "Aplicación",
+    "fees": "Tarifas",
+    "documents": "Documentos"
+  },
+  "marketData": {
+    "title": "Datos de Mercado",
+    "livePrices": "Precios en Vivo",
+    "marketOverview": "Resumen del Mercado",
+    "priceCharts": "Gráficos de Precios",
+    "marketReports": "Reportes de Mercado",
+    "tradingStatistics": "Estadísticas de Trading",
+    "priceHistory": "Historial de Precios"
+  },
+  "resources": {
+    "title": "Recursos",
+    "publications": "Publicaciones",
+    "researchPapers": "Documentos de Investigación",
+    "annualReports": "Reportes Anuales",
+    "policyDocuments": "Documentos de Política",
+    "careers": "Carreras",
+    "faq": "Preguntas Frecuentes",
+    "help": "Ayuda"
+  },
+  "media": {
+    "title": "Medios",
+    "news": "Noticias",
+    "pressReleases": "Comunicados de Prensa",
+    "events": "Eventos",
+    "gallery": "Galería",
+    "videos": "Videos",
+    "downloads": "Descargas"
+  },
+  "footer": {
+    "quickLinks": "Enlaces Rápidos",
+    "contactInfo": "Información de Contacto",
+    "socialMedia": "Redes Sociales",
+    "newsletter": "Boletín",
+    "subscribe": "Suscribirse",
+    "privacyPolicy": "Política de Privacidad",
+    "termsOfService": "Términos de Servicio",
+    "disclaimer": "Descargo de Responsabilidad",
+    "copyright": "Derechos de Autor",
+    "allRightsReserved": "Todos los Derechos Reservados"
+  }
+}

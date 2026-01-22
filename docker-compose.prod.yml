@@ -1,0 +1,122 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: gcx_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./go-backend/database/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+    networks:
+      - gcx_network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: gcx_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - gcx_network
+
+  # Laravel Backend
+  laravel:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gcx_laravel
+    restart: unless-stopped
+    environment:
+      - APP_ENV=production
+      - DB_HOST=mysql
+      - REDIS_HOST=redis
+    depends_on:
+      - mysql
+      - redis
+    volumes:
+      - ./backend:/var/www/html
+      - laravel_storage:/var/www/html/storage
+    networks:
+      - gcx_network
+
+  # Go Backend
+  go-backend:
+    build:
+      context: ./go-backend
+      dockerfile: Dockerfile
+    container_name: gcx_go
+    restart: unless-stopped
+    environment:
+      - DB_HOST=mysql
+      - REDIS_HOST=redis
+    depends_on:
+      - mysql
+      - redis
+    ports:
+      - "8080:8080"
+    networks:
+      - gcx_network
+
+  # Frontend (Vue.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gcx_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - laravel
+    networks:
+      - gcx_network
+
+  # Market Data App (Next.js)
+  marketdata:
+    build:
+      context: ./gcx_marketdata
+      dockerfile: Dockerfile
+    container_name: gcx_marketdata
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    depends_on:
+      - go-backend
+    networks:
+      - gcx_network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: gcx_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - marketdata
+      - laravel
+    networks:
+      - gcx_network
+
+volumes:
+  mysql_data:
+  laravel_storage:
+
+networks:
+  gcx_network:
+    driver: bridge
