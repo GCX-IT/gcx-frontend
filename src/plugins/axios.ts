@@ -10,10 +10,10 @@ const BACKEND_CONFIG = {
   GO_BACKEND_URL_LOCAL: 'http://localhost:8080',
   GO_BACKEND_URL_NGROK: 'https://8f5e6659a95f.ngrok-free.app',
   GO_BACKEND_URL_HEROKU: 'https://gcx-backend-api-e4d0fabe07d7.herokuapp.com',
-  GO_BACKEND_URL_DIGITALOCEAN: 'http://188.166.159.42:8081',
+  GO_BACKEND_URL_VERCEL_PROXY: '', // Empty string for Vercel proxy via vercel.json rewrites
   GO_USE_NGROK: false, // Set to true for ngrok
   GO_USE_HEROKU: false, // Set to true for Heroku
-  GO_USE_DIGITALOCEAN: true, // Set to true for DigitalOcean
+  GO_USE_VERCEL_PROXY: true, // Set to true for Vercel proxy to DigitalOcean
   
   LARAVEL_BACKEND_URL: 'http://localhost:8000'
 }
@@ -21,8 +21,8 @@ const BACKEND_CONFIG = {
 // Get the appropriate backend URL
 const getBackendURL = () => {
   if (BACKEND_CONFIG.BACKEND_TYPE === 'go') {
-    if (BACKEND_CONFIG.GO_USE_DIGITALOCEAN) {
-      return BACKEND_CONFIG.GO_BACKEND_URL_DIGITALOCEAN
+    if (BACKEND_CONFIG.GO_USE_VERCEL_PROXY) {
+      return BACKEND_CONFIG.GO_BACKEND_URL_VERCEL_PROXY
     }
     if (BACKEND_CONFIG.GO_USE_HEROKU) {
       return BACKEND_CONFIG.GO_BACKEND_URL_HEROKU
