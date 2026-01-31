@@ -90,22 +90,28 @@ export const usePageContent = () => {
     }
   }
 
-  // Get site settings
+  // Get site settings (uses public API when no group for unauthenticated/homepage use)
   const getSiteSettings = async (group?: string): Promise<Record<string, string>> => {
     loading.value = true
     error.value = null
 
     try {
-      const url = group ? `/api/settings/group/${group}` : '/api/settings'
+      // Use public endpoint when no group so it works without auth (homepage, etc.)
+      const url = group ? `/api/settings/group/${group}` : '/api/settings/public'
       const response = await axios.get(url)
       loading.value = false
-      
-      // Convert array to object for easier access
+
       const settingsObject: Record<string, string> = {}
-      const settings = response.data.settings || []
-      settings.forEach((setting: Setting) => {
-        settingsObject[setting.key] = setting.value
-      })
+      const settings = response.data.settings
+
+      if (Array.isArray(settings)) {
+        settings.forEach((setting: Setting) => {
+          settingsObject[setting.key] = setting.value
+        })
+      } else if (settings && typeof settings === 'object') {
+        // Public API returns { key: value } directly
+        Object.assign(settingsObject, settings)
+      }
       
       return settingsObject
     } catch (err: any) {
