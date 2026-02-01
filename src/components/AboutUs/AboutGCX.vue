@@ -14,7 +14,8 @@ const ceoName = computed(() => getContent('ceo_name', 'Ms. Evelyn Abakah'))
 const ceoTitle = computed(() => getContent('ceo_title', 'Chief Executive Officer'))
 const ceoImage = computed(() => {
   const image = getImage('ceo_image', '/logo_black.png')
-  return image.startsWith('/uploads') ? getImageUrl(image) : image
+  // Always use getImageUrl to normalize both absolute and relative URLs
+  return getImageUrl(image)
 })
 const ceoIntro = computed(() => getContent('ceo_intro', 'Ghana Commodity Exchange\'s Management team is led by Ms. Evelyn Abakah, the Chief Executive Officer.'))
 const keyGoalTitle = computed(() => getContent('key_goal_title', 'Our Key Goal'))
