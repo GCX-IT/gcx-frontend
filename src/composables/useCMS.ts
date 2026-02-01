@@ -59,8 +59,8 @@ export const useCMS = () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  // API Base URL
-  const API_BASE = '/api'
+  // API Base URL (set VITE_API_BASE to your backend URL in development to bypass proxy)
+  const API_BASE = (import.meta.env && import.meta.env.VITE_API_BASE) ? String(import.meta.env.VITE_API_BASE) : '/api'
 
   // Helper function to get auth headers
   const getAuthHeaders = () => {

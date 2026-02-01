@@ -10,6 +10,10 @@
       "destination": "http://188.166.159.42:8082/api/:path*"
     },
     {
+      "source": "/uploads/:path*",
+      "destination": "http://188.166.159.42:8082/uploads/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
