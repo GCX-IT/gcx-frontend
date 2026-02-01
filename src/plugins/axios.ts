@@ -21,17 +21,19 @@ const BACKEND_CONFIG = {
 // Get the appropriate backend URL
 const getBackendURL = () => {
   if (BACKEND_CONFIG.BACKEND_TYPE === 'go') {
-    // Check env vars for local VPS development
+    // Production: use Vercel proxy (empty baseURL = relative URLs via vercel.json)
+    if (import.meta.env.MODE === 'production') {
+      return BACKEND_CONFIG.GO_BACKEND_URL_VERCEL_PROXY // Empty string
+    }
+    
+    // Development: check env vars for local VPS
     const useVPS = import.meta.env.VITE_USE_VPS === 'true'
     const vpsUrl = import.meta.env.VITE_API_BASE
     
     if (useVPS && vpsUrl) {
       return vpsUrl
     }
-    if (import.meta.env.MODE === 'development' && !useVPS && vpsUrl) {
-      // In dev mode without explicit VITE_USE_VPS, use Vercel proxy (for production testing)
-      return BACKEND_CONFIG.GO_BACKEND_URL_VERCEL_PROXY
-    }
+    
     if (BACKEND_CONFIG.GO_USE_HEROKU) {
       return BACKEND_CONFIG.GO_BACKEND_URL_HEROKU
     }
