@@ -314,13 +314,8 @@ const downloadContract = async () => {
   }
 
   try {
-    // Convert local path to S3 key if needed
-    let s3Key = props.commodity.contractFile
-    if (props.commodity.contractFile.startsWith('/uploads/contracts/')) {
-      s3Key = 'contracts/' + props.commodity.contractFile.substring('/uploads/contracts/'.length)
-    }
-    
-    await viewFile(s3Key)
+    // Pass the contract file URL/path directly - backend will handle both formats
+    await viewFile(props.commodity.contractFile)
   } catch (error) {
     console.error('Failed to view contract:', error)
   }

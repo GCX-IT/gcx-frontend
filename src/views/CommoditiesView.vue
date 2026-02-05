@@ -60,13 +60,8 @@ const downloadContract = async (commodity: any) => {
   // View contract file from S3 via backend
   if (commodity.contractFile) {
     try {
-      // Convert local path to S3 key if needed
-      let s3Key = commodity.contractFile
-      if (commodity.contractFile.startsWith('/uploads/contracts/')) {
-        s3Key = 'contracts/' + commodity.contractFile.substring('/uploads/contracts/'.length)
-      }
-      
-      await viewFile(s3Key)
+      // Pass the contract file URL/path directly - backend will handle both formats
+      await viewFile(commodity.contractFile)
     } catch (error) {
       console.error('Failed to view contract:', error)
     }
