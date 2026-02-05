@@ -87,21 +87,11 @@ export interface CommodityData {
   contractFile: string
 }
 
-// Helper function to convert local contract paths to S3 URLs
+// Helper function to get contract file path - send local path to backend
+// Backend will serve from local filesystem if available
 const convertToS3Url = (contractPath: string): string => {
-  // If already an S3 URL, return as-is
-  if (contractPath?.startsWith('http')) {
-    return contractPath
-  }
-
-  // If local path like /uploads/contracts/filename.pdf
-  if (contractPath?.startsWith('/uploads/contracts/')) {
-    const filename = contractPath.split('/').pop()
-    return `${S3_BUCKET_URL}/${S3_CONTRACTS_PREFIX}/${filename}`
-  }
-
-  // Fallback: return original or default
-  return contractPath || '/gcx-online-trading-member.pdf'
+  // Return the path as-is - backend will handle both S3 URLs and local paths
+  return contractPath || '/uploads/contracts/default.pdf'
 }
 
 class CommoditiesService {
