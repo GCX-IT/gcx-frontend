@@ -26,8 +26,16 @@ class DocumentService {
         }
       })
 
-      console.log('✅ Document uploaded successfully')
-      return response.data
+      // Backend returns data wrapped in a 'data' object
+      const uploadedFile = (response.data as any).data || response.data
+      console.log('✅ Document uploaded successfully:', uploadedFile)
+      return {
+        success: true,
+        message: 'File uploaded successfully',
+        url: uploadedFile.url,
+        filename: uploadedFile.filename,
+        size: uploadedFile.size
+      }
     } catch (error: any) {
       console.error('❌ Error uploading document:', error)
       return {
