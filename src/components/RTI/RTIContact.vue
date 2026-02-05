@@ -60,10 +60,10 @@ import { isDarkMode } from '../../utils/darkMode'
                     For general inquiries and support
                   </p>
                   <a 
-                    href="mailto:contact@gcx.com.gh" 
+                    href="mailto:info@gcx.com.gh" 
                     class="text-green-600 hover:text-green-800 font-medium transition-colors duration-200"
                   >
-                    contact@gcx.com.gh
+                    info@gcx.com.gh
                   </a>
                 </div>
               </div>

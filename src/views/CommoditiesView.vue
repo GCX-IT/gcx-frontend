@@ -48,7 +48,7 @@ const handleImageError = (event: Event) => {
   }
 }
 
-const downloadContract = (commodity: any) => {
+const downloadContract = async (commodity: any) => {
   // If multiple contract types, let user choose via slider
   const hasMultipleContractTypes = commodity.contractTypes && commodity.contractTypes.length > 1
   if (hasMultipleContractTypes) {
@@ -56,7 +56,22 @@ const downloadContract = (commodity: any) => {
     return
   }
 
-  // Open the contract file for inline viewing in a new tab if available
+  // Get presigned URL from backend if available
+  if (commodity.id && commodity.contractFile) {
+    try {
+      const response = await fetch(`/api/commodities/${commodity.id}/contract-url`)
+      const data = await response.json()
+      if (data.success && data.url) {
+        window.open(data.url, '_blank', 'noopener,noreferrer')
+        return
+      }
+    } catch (error) {
+      console.error('Failed to fetch presigned URL:', error)
+      // Fall back to direct URL
+    }
+  }
+
+  // Fallback: Open the contract file directly
   if (commodity.contractFile) {
     window.open(commodity.contractFile, '_blank', 'noopener,noreferrer')
   }

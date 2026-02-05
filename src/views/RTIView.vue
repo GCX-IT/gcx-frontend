@@ -301,7 +301,7 @@ onMounted(() => {
                 <div>
                   <p class="font-semibold">Failed to submit application</p>
                   <p class="text-sm mt-1">{{ errorMessage }}</p>
-                  <p class="text-sm mt-2">Please try again or contact us directly at contact@gcx.com.gh</p>
+                  <p class="text-sm mt-2">Please try again or contact us directly at info@gcx.com.gh</p>
                 </div>
               </div>
             </div>

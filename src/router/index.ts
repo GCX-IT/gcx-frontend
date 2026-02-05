@@ -12,6 +12,7 @@ import MembershipView from '../views/MembershipView.vue'
 import MembershipApplicationView from '../views/MembershipApplicationView.vue'
 import MarketDataView from '../views/MarketDataView.vue'
 import ResourcesView from '../views/ResourcesView.vue'
+import ProcurementTendersView from '../views/ProcurementTendersView.vue'
 import CareersView from '../views/CareersView.vue'
 import JobFunctionAreaView from '../views/JobFunctionAreaView.vue'
 import CommoditiesView from '../views/CommoditiesView.vue'
@@ -94,6 +95,11 @@ const router = createRouter({
       path: '/resources',
       name: 'resources',
       component: ResourcesView
+    },
+    {
+      path: '/procurement/tenders',
+      name: 'procurement-tenders',
+      component: ProcurementTendersView
     },
     {
       path: '/careers',
@@ -180,12 +186,6 @@ const router = createRouter({
           meta: { section: 'image-manager' }
         },
         {
-          path: 'pages',
-          name: 'cms-pages',
-          component: () => import('../views/CMSView.vue'),
-          meta: { section: 'pages' }
-        },
-        {
           path: 'content',
           name: 'cms-content',
           component: () => import('../views/CMSView.vue'),
@@ -264,22 +264,10 @@ const router = createRouter({
           meta: { section: 'news-manager' }
         },
         {
-          path: 'market-data',
-          name: 'cms-market-data',
-          component: () => import('../views/CMSView.vue'),
-          meta: { section: 'market-data' }
-        },
-        {
           path: 'users',
           name: 'cms-users',
           component: () => import('../views/CMSView.vue'),
           meta: { section: 'users' }
-        },
-        {
-          path: 'analytics',
-          name: 'cms-analytics',
-          component: () => import('../views/CMSView.vue'),
-          meta: { section: 'analytics' }
         },
         {
           path: 'settings',

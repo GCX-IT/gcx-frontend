@@ -24,8 +24,8 @@ const route = useRoute()
 
 const activeSection = computed(() => route.meta.section || 'dashboard')
 
-// Track which dropdowns are open
-const openDropdowns = ref<Set<string>>(new Set()) // All dropdowns closed by default
+// Track which dropdowns are open - only one at a time
+const openDropdowns = ref<string | null>(null)
 
 // Navigation items with PrimeIcons - Organized with dropdowns
 const navigationItems = computed<NavigationItem[]>(() => [
@@ -50,12 +50,6 @@ const navigationItems = computed<NavigationItem[]>(() => [
         label: 'Images',
         icon: 'pi pi-image',
         permissions: ['blogger', 'admin']
-      },
-      {
-        id: 'pages',
-        label: 'Pages',
-        icon: 'pi pi-globe',
-        permissions: ['admin']
       },
       {
         id: 'content-manager',
@@ -152,21 +146,9 @@ const navigationItems = computed<NavigationItem[]>(() => [
     permissions: ['admin', 'editor']
   },
   {
-    id: 'market-data',
-    label: 'Market Data',
-    icon: 'pi pi-chart-line',
-    permissions: ['admin']
-  },
-  {
     id: 'users',
     label: 'User Management',
     icon: 'pi pi-users',
-    permissions: ['admin']
-  },
-  {
-    id: 'analytics',
-    label: 'Analytics',
-    icon: 'pi pi-chart-bar',
     permissions: ['admin']
   },
   {
@@ -204,17 +186,12 @@ const hasChildren = (item: NavigationItem): boolean => {
 }
 
 const isDropdownOpen = (itemId: string): boolean => {
-  return openDropdowns.value.has(itemId)
+  return openDropdowns.value === itemId
 }
 
 const toggleDropdown = (itemId: string) => {
-  if (openDropdowns.value.has(itemId)) {
-    openDropdowns.value.delete(itemId)
-  } else {
-    openDropdowns.value.add(itemId)
-  }
-  // Force reactivity update
-  openDropdowns.value = new Set(openDropdowns.value)
+  // Professional accordion behavior - close if already open, otherwise open and close others
+  openDropdowns.value = openDropdowns.value === itemId ? null : itemId
 }
 
 const navigateToSection = (section: string) => {
@@ -223,7 +200,6 @@ const navigateToSection = (section: string) => {
     'dashboard': 'cms-dashboard',
     'posts': 'cms-posts',
     'image-manager': 'cms-images',
-    'pages': 'cms-pages',
     'content-manager': 'cms-content',
     'team-manager': 'cms-team',
     'trader-manager': 'cms-traders',
@@ -237,9 +213,7 @@ const navigateToSection = (section: string) => {
     'video-manager': 'cms-video',
     'rti-manager': 'cms-rti',
     'news-manager': 'cms-news',
-    'market-data': 'cms-market-data',
     'users': 'cms-users',
-    'analytics': 'cms-analytics',
     'settings': 'cms-settings'
   }
   
@@ -262,7 +236,7 @@ const handleLogout = async () => {
 
 <template>
   <div 
-    class="fixed left-0 top-0 h-full w-72 z-40 transform transition-all duration-300 ease-in-out border-r shadow-xl bg-gray-900 border-gray-800"
+    class="fixed left-0 top-0 h-full w-72 z-40 transform transition-all duration-300 ease-in-out border-r shadow-xl bg-gray-900 border-gray-800 flex flex-col"
     :class="isOpen ? 'translate-x-0' : '-translate-x-full'"
   >
     <!-- Sidebar Header -->
@@ -291,7 +265,7 @@ const handleLogout = async () => {
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto p-4 space-y-2 pb-80">
+    <nav class="flex-1 overflow-y-auto p-4 space-y-2">
       <template v-for="item in visibleItems" :key="item.id">
         <!-- Parent Item without children -->
         <div v-if="!hasChildren(item)">
@@ -354,7 +328,7 @@ const handleLogout = async () => {
     </nav>
 
     <!-- Fixed Bottom Section -->
-    <div class="absolute bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800">
+    <div class="shrink-0 bg-gray-900 border-t border-gray-800">
       <!-- User Info -->
       <div class="px-6 py-4">
         <div class="flex items-center space-x-3 p-3 rounded-lg bg-gray-800/50 border border-gray-700">

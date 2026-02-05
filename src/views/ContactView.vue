@@ -488,7 +488,7 @@ const initLeafletMap = () => {
               <div>
                 <p class="font-semibold">Failed to send message</p>
                 <p class="text-sm mt-1">{{ errorMessage }}</p>
-                <p class="text-sm mt-2">Please try again or contact us directly at contact@gcx.com.gh</p>
+                <p class="text-sm mt-2">Please try again or contact us directly at info@gcx.com.gh</p>
               </div>
             </div>
           </div>
@@ -551,8 +551,26 @@ const initLeafletMap = () => {
               <div>
                 <h3 class="font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-slate-900'">Email</h3>
                 <p class="transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
-                  <a href="mailto:contact@gcx.com.gh" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
-                    contact@gcx.com.gh
+                  <a href="mailto:info@gcx.com.gh" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
+                    info@gcx.com.gh
+                  </a>
+                </p>
+              </div>
+            </div>
+
+            <!-- WhatsApp -->
+            <div class="flex items-start space-x-4 p-6 rounded-xl shadow-sm border transition-colors duration-300" :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'">
+              <div class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-300" :class="isDarkMode ? 'bg-emerald-900/30' : 'bg-emerald-100'">
+                <!-- WhatsApp Official Icon -->
+                <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24" :class="isDarkMode ? 'text-emerald-400' : 'text-emerald-600'">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.272-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-4.935 1.239l-.354.202-.367-.06a9.944 9.944 0 00-3.007-.449C3.75 5.509 1.5 7.759 1.5 10.5s2.25 4.99 5.312 4.99h.003c.981 0 1.922-.165 2.831-.483l.335-.143.36.074a9.88 9.88 0 004.97 1.354c2.993 0 5.312-2.25 5.312-5.001 0-2.501-2.25-4.991-5.312-4.991"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-slate-900'">WhatsApp</h3>
+                <p class="transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
+                  <a href="https://wa.me/233594164465" target="_blank" rel="noopener noreferrer" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
+                    +233 59 416 4465
                   </a>
                 </p>
               </div>

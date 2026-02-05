@@ -1,6 +1,10 @@
 import axios from '../plugins/axios'
 import { marketDataService, type ProcessedMarketData } from './marketDataService'
 
+// S3 bucket configuration
+const S3_BUCKET_URL = 'https://gcxwebsite.s3.eu-north-1.amazonaws.com'
+const S3_CONTRACTS_PREFIX = 'contracts'
+
 // Types for CMS commodity data
 export interface CMSCommodity {
   id: number
@@ -81,6 +85,23 @@ export interface CommodityData {
     maximumPrice: string
   }
   contractFile: string
+}
+
+// Helper function to convert local contract paths to S3 URLs
+const convertToS3Url = (contractPath: string): string => {
+  // If already an S3 URL, return as-is
+  if (contractPath?.startsWith('http')) {
+    return contractPath
+  }
+
+  // If local path like /uploads/contracts/filename.pdf
+  if (contractPath?.startsWith('/uploads/contracts/')) {
+    const filename = contractPath.split('/').pop()
+    return `${S3_BUCKET_URL}/${S3_CONTRACTS_PREFIX}/${filename}`
+  }
+
+  // Fallback: return original or default
+  return contractPath || '/gcx-online-trading-member.pdf'
 }
 
 class CommoditiesService {
@@ -171,7 +192,7 @@ class CommoditiesService {
             minimumPrice: `GHS ${cmsCommodity.minimum_price.toLocaleString()} per metric ton`,
             maximumPrice: `GHS ${cmsCommodity.maximum_price.toLocaleString()} per metric ton`
           },
-          contractFile: cmsCommodity.contract_file || '/gcx-online-trading-member.pdf'
+          contractFile: convertToS3Url(cmsCommodity.contract_file)
         }
       })
 

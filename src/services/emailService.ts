@@ -65,7 +65,7 @@ export interface EmailOptions {
 
 class EmailService {
   private readonly API_URL = 'https://api.gcx.com.gh/notification-api/public/api/email/'
-  private readonly CONTACT_EMAIL = 'contact@gcx.com.gh'
+  private readonly CONTACT_EMAIL = 'info@gcx.com.gh'
   private readonly IT_SUPPORT_EMAIL = 'itsupport@gcx.com.gh'
   private readonly FROM_EMAIL = 'noreply@gcx.com.gh'
   private readonly FROM_NAME = 'GCX System'
@@ -233,7 +233,7 @@ class EmailService {
               <p style="margin: 0 0 5px 0; font-weight: bold; color: #475569; font-size: 14px;">Contact Details</p>
               <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.4;">
                 Phone: +233 59 416 4465<br>
-                Email: contact@gcx.com.gh<br>
+                Email: info@gcx.com.gh<br>
                 Digital Address: GA-077-0681
               </p>
             </div>
@@ -459,7 +459,7 @@ class EmailService {
               <p style="margin: 0 0 5px 0; font-weight: bold; color: #475569; font-size: 14px;">Contact Details</p>
               <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.4;">
                 Phone: +233 59 416 4465<br>
-                Email: contact@gcx.com.gh<br>
+                Email: info@gcx.com.gh<br>
                 Digital Address: GA-077-0681
               </p>
             </div>
@@ -505,7 +505,7 @@ class EmailService {
       const confirmationEmailBody = this.createEventConfirmationEmailBody(registrationData, eventData)
       const subject = `New Event Registration: ${eventData.title}`
 
-      // Send to contact@gcx.com.gh
+      // Send to info@gcx.com.gh
       try {
         await this.sendEmail({
           to: this.CONTACT_EMAIL,
@@ -740,7 +740,7 @@ class EmailService {
               <p style="margin: 0 0 5px 0; font-weight: bold; color: #475569; font-size: 14px;">Contact Details</p>
               <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.4;">
                 Phone: +233 59 416 4465<br>
-                Email: contact@gcx.com.gh<br>
+                Email: info@gcx.com.gh<br>
                 Digital Address: GA-077-0681
               </p>
             </div>
@@ -786,7 +786,7 @@ class EmailService {
       const confirmationEmailBody = this.createRTIConfirmationEmailBody(applicationData)
       const subject = `New RTI Application: ${applicationData.request_id}`
 
-      // Send to contact@gcx.com.gh
+      // Send to info@gcx.com.gh
       try {
         await this.sendEmail({
           to: this.CONTACT_EMAIL,
@@ -869,7 +869,7 @@ class EmailService {
       const confirmationEmailBody = this.createConfirmationEmailBody(formData)
       const subject = `New Contact Form Submission: ${formData.subject}`
 
-      // Send to contact@gcx.com.gh
+      // Send to info@gcx.com.gh
       try {
         await this.sendEmail({
           to: this.CONTACT_EMAIL,

@@ -74,17 +74,11 @@ const { t } = useI18n()
         <div>
           <h3 class="text-lg font-bold mb-6 text-yellow-500">Useful Links</h3>
           <ul class="space-y-3">
-            <li><router-link to="/commodities" class="text-white transition-colors hover:text-yellow-400">Commodities</router-link></li>
             <li><router-link to="/membership" class="text-white transition-colors hover:text-yellow-400">Membership Types</router-link></li>
-            <li><router-link to="/membership/application" class="text-white transition-colors hover:text-yellow-400">Membership Application Process</router-link></li>
-            <li><router-link to="/about" class="text-white transition-colors hover:text-yellow-400">GCX Certification Program</router-link></li>
-            <li><router-link to="/membership/application" class="text-white transition-colors hover:text-yellow-400">Application Forms</router-link></li>
+            <li><router-link to="/membership/application" class="text-white transition-colors hover:text-yellow-400">Membership Application</router-link></li>
+            <li><a href="https://apps.gcx.com.gh/onlineforms/" target="_blank" rel="noopener noreferrer" class="text-white transition-colors hover:text-yellow-400">GCX Certification Program</a></li>
             <li><router-link to="/resources" class="text-white transition-colors hover:text-yellow-400">GCX Resources</router-link></li>
-            <li><router-link to="/careers" class="text-white transition-colors hover:text-yellow-400">Careers</router-link></li>
-            <li><router-link to="/about" class="text-white transition-colors hover:text-yellow-400">Rules & Regulations</router-link></li>
-            <li><router-link to="/about" class="text-white transition-colors hover:text-yellow-400">Procurement</router-link></li>
-            <li><router-link to="/blog" class="text-white transition-colors hover:text-yellow-400">News</router-link></li>
-            <li><router-link to="/contact" class="text-white transition-colors hover:text-yellow-400">Location</router-link></li>
+            <li><router-link to="/membership/application" class="text-white transition-colors hover:text-yellow-400">Rules & Regulations</router-link></li>
           </ul>
         </div>
 
@@ -130,8 +124,8 @@ const { t } = useI18n()
               </svg>
               <div>
                 <p class="font-medium text-white">Email</p>
-                <a href="mailto:contact@gcx.com.gh" class="text-white transition-colors hover:text-yellow-400 text-sm">
-                  contact@gcx.com.gh
+                <a href="mailto:info@gcx.com.gh" class="text-white transition-colors hover:text-yellow-400 text-sm">
+                  info@gcx.com.gh
                 </a>
               </div>
             </div>
@@ -143,7 +137,7 @@ const { t } = useI18n()
       <div class="border-t border-slate-700 mt-12 pt-8">
         <div class="flex flex-col md:flex-row justify-between items-center">
           <div class="text-white text-sm mb-4 md:mb-0">
-            <p>&copy; 2018 - 2025 Ghana Commodity Exchange. All Rights Reserved</p>
+            <p>&copy; 2018 - 2026 Ghana Commodity Exchange. All Rights Reserved</p>
           </div>
           <div class="flex space-x-6 text-sm">
             <router-link to="/about" class="text-white transition-colors hover:text-yellow-400">

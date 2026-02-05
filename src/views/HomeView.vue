@@ -7,6 +7,7 @@ import { getImagePath } from '../utils/imageUtils'
 
 // Import new landing page components
 import HeroSection from '../components/Landing/HeroSection.vue'
+import PromoSection from '../components/Landing/PromoSection.vue'
 import ServicesSection from '../components/Landing/ServicesSection.vue'
 import MarketDataSection from '../components/Landing/MarketDataSection.vue'
 import NewsInsightsSection from '../components/Landing/NewsInsightsSection.vue'
@@ -94,6 +95,9 @@ const ctaSubtitle = computed(() => ctaContent.value?.main_subtitle || staticCtaC
   <div class="min-h-screen transition-colors duration-300" :class="isDarkMode ? 'bg-slate-900' : 'bg-slate-50'">
     <!-- 1. Market Slider - Live Market Data -->
     <HeroSection />
+    
+    <!-- 1.5. Promo Section - USSD, Free SHS, Membership -->
+    <PromoSection />
     
          <!-- 2. Why Join Us Section -->
      <section 
@@ -209,18 +213,18 @@ const ctaSubtitle = computed(() => ctaContent.value?.main_subtitle || staticCtaC
           <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
             <h2 class="text-3xl font-bold text-black mb-4">{{ ctaContent?.cta1_title || 'Register to become a member' }}</h2>
             <p class="text-xl text-black/80 mb-6">{{ ctaContent?.cta1_description || 'And be part of a growing network' }}</p>
-            <button class="bg-black hover:bg-slate-800 text-white font-bold py-4 px-8 rounded-xl transition-all transform hover:scale-105 shadow-lg">
+            <RouterLink to="/membership" class="inline-block bg-black hover:bg-slate-800 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg">
               {{ ctaContent?.cta1_button_text || 'Become a Member' }}
-            </button>
+            </RouterLink>
           </div>
           
           <!-- Download Forms Section -->
           <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
             <h2 class="text-3xl font-bold text-black mb-4">{{ ctaContent?.cta2_title || 'Download Forms and Other resources' }}</h2>
             <p class="text-xl text-black/80 mb-6">{{ ctaContent?.cta2_description || 'Get access to much more information' }}</p>
-            <button class="bg-white/20 hover:bg-white/30 text-black font-semibold py-4 px-8 rounded-xl transition-all transform hover:scale-105 shadow-lg">
+            <RouterLink to="/resources" class="inline-block bg-white/20 hover:bg-white/30 text-black font-semibold py-4 px-8 rounded-xl transition-all shadow-lg">
               {{ ctaContent?.cta2_button_text || 'Learn More' }}
-            </button>
+            </RouterLink>
           </div>
         </div>
       </div>

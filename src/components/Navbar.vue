@@ -135,6 +135,12 @@ const navigation = computed(() => [
         ]
       },
       { 
+        title: 'Procurement',
+        items: [
+          { name: 'Procurement Tenders', href: '/procurement/tenders', description: 'Post and browse commodity procurement tenders' }
+        ]
+      },
+      { 
         title: 'Career Opportunities',
         items: [
           { name: 'Job Openings', href: '/careers#openings', description: 'Current career opportunities at GCX' },

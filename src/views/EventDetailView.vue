@@ -654,7 +654,7 @@ onMounted(() => {
                 </svg>
                 <h3 class="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Registration Failed</h3>
                 <p class="text-red-700 dark:text-red-300 mb-4">{{ errorMessage }}</p>
-                <p class="text-sm text-red-600 dark:text-red-400">Please try again or contact us directly at contact@gcx.com.gh</p>
+                <p class="text-sm text-red-600 dark:text-red-400">Please try again or contact us directly at info@gcx.com.gh</p>
               </div>
             </div>
 

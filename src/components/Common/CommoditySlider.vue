@@ -306,23 +306,39 @@ const close = () => {
   emit('close')
 }
 
-const downloadContract = () => {
+const downloadContract = async () => {
   const currentType = currentContractType.value
-  if (currentType && currentType.contractFile) {
-    const link = document.createElement('a')
-    link.href = currentType.contractFile
-    link.download = `${currentType.name}-Contract.pdf`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  } else if (props.commodity && props.commodity.contractFile) {
-    // Fallback to main commodity contract file
-    const link = document.createElement('a')
-    link.href = props.commodity.contractFile
-    link.download = `${props.commodity.name}-Contract.pdf`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+  let contractURL = ''
+  let filename = 'Contract.pdf'
+
+  // Try to get presigned URL from backend
+  if (props.commodity && props.commodity.id) {
+    try {
+      const response = await fetch(`/api/commodities/${props.commodity.id}/contract-url`)
+      const data = await response.json()
+      if (data.success && data.url) {
+        contractURL = data.url
+        filename = `${props.commodity.name}-Contract.pdf`
+      }
+    } catch (error) {
+      console.error('Failed to fetch presigned URL:', error)
+    }
+  }
+
+  // Fallback to direct URL if presigned URL not available
+  if (!contractURL) {
+    if (currentType && currentType.contractFile) {
+      contractURL = currentType.contractFile
+      filename = `${currentType.name}-Contract.pdf`
+    } else if (props.commodity && props.commodity.contractFile) {
+      contractURL = props.commodity.contractFile
+      filename = `${props.commodity.name}-Contract.pdf`
+    }
+  }
+
+  // Open the contract file
+  if (contractURL) {
+    window.open(contractURL, '_blank', 'noopener,noreferrer')
   }
 }
 
