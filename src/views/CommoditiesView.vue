@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from '../composables/useI18n'
 import { isDarkMode } from '../utils/darkMode'
+import { viewFile } from '../services/fileService'
 import Footer from '../components/Footer.vue'
 import CommoditySlider from '../components/Common/CommoditySlider.vue'
 import commoditiesService, { type CommodityData } from '../services/commoditiesService'
@@ -56,24 +57,19 @@ const downloadContract = async (commodity: any) => {
     return
   }
 
-  // Get presigned URL from backend if available
-  if (commodity.id && commodity.contractFile) {
-    try {
-      const response = await fetch(`/api/commodities/${commodity.id}/contract-url`)
-      const data = await response.json()
-      if (data.success && data.url) {
-        window.open(data.url, '_blank', 'noopener,noreferrer')
-        return
-      }
-    } catch (error) {
-      console.error('Failed to fetch presigned URL:', error)
-      // Fall back to direct URL
-    }
-  }
-
-  // Fallback: Open the contract file directly
+  // View contract file from S3 via backend
   if (commodity.contractFile) {
-    window.open(commodity.contractFile, '_blank', 'noopener,noreferrer')
+    try {
+      // Convert local path to S3 key if needed
+      let s3Key = commodity.contractFile
+      if (commodity.contractFile.startsWith('/uploads/contracts/')) {
+        s3Key = 'contracts/' + commodity.contractFile.substring('/uploads/contracts/'.length)
+      }
+      
+      await viewFile(s3Key)
+    } catch (error) {
+      console.error('Failed to view contract:', error)
+    }
   }
 }
 

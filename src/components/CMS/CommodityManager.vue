@@ -313,45 +313,82 @@
           <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead class="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contract Type</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Code</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sort Order</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Order</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              <tr v-for="contractType in contractTypes" :key="contractType.id">
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
-                      <img v-if="contractType.image_path" :src="contractType.image_path" :alt="contractType.name" class="h-10 w-10 rounded-lg object-cover">
-                      <div v-else class="h-10 w-10 rounded-lg bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
-                        <i class="pi pi-image text-gray-400"></i>
+              <template v-for="contractType in contractTypes" :key="contractType.id">
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center gap-3">
+                      <div class="flex-shrink-0">
+                        <img v-if="contractType.image_path" :src="contractType.image_path" :alt="contractType.name" class="h-8 w-8 rounded object-cover">
+                        <div v-else class="h-8 w-8 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
+                          <i class="pi pi-image text-xs text-gray-400"></i>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-sm font-semibold text-gray-900 dark:text-white">{{ contractType.name }}</div>
+                        <button @click="toggleDescription(contractType.id)" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                          {{ expandedDescriptions[contractType.id] ? 'Hide' : 'View' }} details
+                        </button>
                       </div>
                     </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900 dark:text-white">{{ contractType.name }}</div>
-                      <div class="text-sm text-gray-500 dark:text-gray-400">{{ contractType.description }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <code class="text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-900 dark:text-white">{{ contractType.code }}</code>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span :class="contractType.is_active 
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                      : 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400'" 
+                      class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
+                      <i :class="contractType.is_active ? 'pi pi-check text-xs mr-1' : 'pi pi-times text-xs mr-1'"></i>
+                      {{ contractType.is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="inline-flex items-center justify-center h-7 w-7 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm font-medium">
+                      {{ contractType.sort_order }}
                     </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ contractType.code }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span :class="contractType.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                    {{ contractType.is_active ? 'Active' : 'Inactive' }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ contractType.sort_order }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button @click="editContractType(contractType)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3">
-                    Edit
-                  </button>
-                  <button @click="deleteContractType(contractType.id)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
-                    Delete
-                  </button>
-                </td>
-              </tr>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div class="flex gap-2">
+                      <button @click="editContractType(contractType)" class="inline-flex items-center px-3 py-1 rounded text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors">
+                        <i class="pi pi-pencil text-xs mr-1"></i>
+                        Edit
+                      </button>
+                      <button @click="deleteContractType(contractType.id)" class="inline-flex items-center px-3 py-1 rounded text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors">
+                        <i class="pi pi-trash text-xs mr-1"></i>
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <!-- Expanded Description Row -->
+                <tr v-if="expandedDescriptions[contractType.id]" class="bg-gray-50 dark:bg-gray-700/50">
+                  <td colspan="5" class="px-6 py-4">
+                    <div class="border-l-4 border-blue-500 pl-4">
+                      <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Description</h4>
+                      <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{{ contractType.description }}</p>
+                      <div class="mt-3 grid grid-cols-2 gap-4">
+                        <div v-if="contractType.full_description">
+                          <h4 class="font-semibold text-gray-900 dark:text-white text-sm mb-1">Full Description</h4>
+                          <p class="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">{{ contractType.full_description }}</p>
+                        </div>
+                        <div v-if="contractType.specifications">
+                          <h4 class="font-semibold text-gray-900 dark:text-white text-sm mb-1">Specifications</h4>
+                          <p class="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">{{ contractType.specifications }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
@@ -1091,6 +1128,7 @@ const showContractTypeModal = ref(false);
 const editingContractType = ref<CMSCommodityContractType | null>(null);
 const savingContractType = ref(false);
 const contractTypeFileInput = ref<HTMLInputElement | null>(null);
+const expandedDescriptions = ref<Record<number, boolean>>({}); // Track expanded descriptions
 
 // Contract Type form data
 const contractTypeFormData = ref({
@@ -1154,6 +1192,15 @@ const visiblePages = computed(() => {
 });
 
 // Methods
+// Toggle description expansion
+const toggleDescription = (contractTypeId: number) => {
+  if (!expandedDescriptions.value[contractTypeId]) {
+    expandedDescriptions.value[contractTypeId] = true;
+  } else {
+    expandedDescriptions.value[contractTypeId] = false;
+  }
+};
+
 const openAddModal = () => {
   editingCommodity.value = null;
   formData.value = {

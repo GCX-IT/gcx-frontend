@@ -201,6 +201,7 @@
 <script setup lang="ts">
 import { isDarkMode } from '../../utils/darkMode'
 import { watch, ref, computed, onMounted } from 'vue'
+import { viewFile } from '../../services/fileService'
 import type { CommodityData } from '../../services/commoditiesService'
 import type { CMSCommodityContractType } from '../../services/commoditiesService'
 import commoditiesService from '../../services/commoditiesService'
@@ -307,38 +308,21 @@ const close = () => {
 }
 
 const downloadContract = async () => {
-  const currentType = currentContractType.value
-  let contractURL = ''
-  let filename = 'Contract.pdf'
-
-  // Try to get presigned URL from backend
-  if (props.commodity && props.commodity.id) {
-    try {
-      const response = await fetch(`/api/commodities/${props.commodity.id}/contract-url`)
-      const data = await response.json()
-      if (data.success && data.url) {
-        contractURL = data.url
-        filename = `${props.commodity.name}-Contract.pdf`
-      }
-    } catch (error) {
-      console.error('Failed to fetch presigned URL:', error)
-    }
+  if (!props.commodity || !props.commodity.contractFile) {
+    console.warn('No contract available for download')
+    return
   }
 
-  // Fallback to direct URL if presigned URL not available
-  if (!contractURL) {
-    if (currentType && currentType.contractFile) {
-      contractURL = currentType.contractFile
-      filename = `${currentType.name}-Contract.pdf`
-    } else if (props.commodity && props.commodity.contractFile) {
-      contractURL = props.commodity.contractFile
-      filename = `${props.commodity.name}-Contract.pdf`
+  try {
+    // Convert local path to S3 key if needed
+    let s3Key = props.commodity.contractFile
+    if (props.commodity.contractFile.startsWith('/uploads/contracts/')) {
+      s3Key = 'contracts/' + props.commodity.contractFile.substring('/uploads/contracts/'.length)
     }
-  }
-
-  // Open the contract file
-  if (contractURL) {
-    window.open(contractURL, '_blank', 'noopener,noreferrer')
+    
+    await viewFile(s3Key)
+  } catch (error) {
+    console.error('Failed to view contract:', error)
   }
 }
 
