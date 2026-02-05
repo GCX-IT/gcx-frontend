@@ -20,7 +20,7 @@ class DocumentService {
       formData.append('file', file)
       formData.append('folder', folder)
 
-      const response = await axios.post<DocumentUploadResponse>('/api/upload/document', formData, {
+      const response = await axios.post<DocumentUploadResponse>('/api/upload/file', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

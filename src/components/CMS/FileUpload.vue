@@ -550,7 +550,7 @@ const uploadFiles = async (fileList: File[]) => {
       formData.append('document', file)
       formData.append('type', props.folder)
       
-      const response = await axios.post('/api/upload/document', formData, {
+      const response = await axios.post('/api/upload/file', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },
