@@ -8,8 +8,8 @@ import { getBackendURL } from '@/plugins/axios'
 const router = useRouter()
 const { login, isAuthenticated, error, isLoading } = useAuth()
 
-const email = ref('admin@gcx.com')
-const password = ref('admin123')
+const email = ref('')
+const password = ref('')
 const showPassword = ref(false)
 
 // Redirect if already logged in
@@ -142,17 +142,7 @@ const handleKeypress = (event: KeyboardEvent) => {
           </button>
         </form>
 
-        <!-- Default Credentials -->
-        <div class="mt-6 p-4 rounded-lg border" 
-             :class="isDarkMode ? 'bg-slate-700 border-slate-600' : 'bg-slate-50 border-slate-200'">
-          <p class="text-xs font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
-            Default Admin Credentials:
-          </p>
-          <p class="text-xs" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">
-            Email: admin@gcx.com<br>
-            Password: admin123
-          </p>
-        </div>
+
 
         <!-- Access Info -->
         <div class="mt-6 p-4 rounded-lg border" 
@@ -165,12 +155,7 @@ const handleKeypress = (event: KeyboardEvent) => {
           </p>
         </div>
 
-        <!-- Backend Status -->
-        <div class="mt-4 text-center">
-          <p class="text-xs" :class="isDarkMode ? 'text-slate-500' : 'text-slate-400'">
-            Using Go Backend: {{ isLoading ? 'Connecting...' : getBackendURL() }}
-          </p>
-        </div>
+
       </div>
     </div>
   </div>
