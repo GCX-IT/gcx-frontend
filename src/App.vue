@@ -5,6 +5,7 @@ import { initializeDarkMode } from './utils/darkMode'
 import Navbar from './components/Navbar.vue'
 import TradingViewTicker from './components/Landing/TradingViewTicker.vue'
 import LoadingPage from './components/LoadingPage.vue'
+import ScrollToTopButton from './components/ScrollToTopButton.vue'
 
 import { RouterView } from 'vue-router'
 
@@ -80,6 +81,7 @@ onMounted(() => {
           </Transition>
         </RouterView>
       </main>
+      <ScrollToTopButton />
     </div>
   </div>
 </template>

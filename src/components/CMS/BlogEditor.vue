@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed, watch } from 'vue'
+import { ref, reactive, onMounted, computed, watch, onBeforeUnmount } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
 import { useI18n } from '../../composables/useI18n'
 import { isDarkMode } from '../../utils/darkMode'
 import { useBlog } from '../../composables/useBlog'
@@ -61,6 +62,9 @@ const showImageLibrary = ref(false)
 const showPreview = ref(false)
 const autoSlug = ref(true)
 const isUploading = ref(false)
+const hasUnsavedChanges = ref(false)
+const autoSaveInterval = ref<number | null>(null)
+const lastSaved = ref<Date | null>(null)
 const wordCount = computed(() => {
   const text = formData.content.replace(/<[^>]*>/g, '')
   return text.trim().split(/\s+/).filter(word => word.length > 0).length
@@ -247,8 +251,43 @@ watch(isDarkMode, () => {
   }
 })
 
+// Watch for changes in formData to set unsaved changes flag
+watch(formData, (newValue, oldValue) => {
+  if (!hasUnsavedChanges.value) {
+    hasUnsavedChanges.value = true;
+    window.addEventListener('beforeunload', beforeUnloadHandler);
+  }
+}, { deep: true });
+
 // Initialize form data
 
+
+onBeforeUnmount(() => {
+  if (autoSaveInterval.value) {
+    clearInterval(autoSaveInterval.value)
+  }
+  window.removeEventListener('beforeunload', beforeUnloadHandler)
+})
+
+// Navigation guard
+onBeforeRouteLeave((to, from, next) => {
+  if (hasUnsavedChanges.value) {
+    if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
+      next()
+    } else {
+      next(false)
+    }
+  } else {
+    next()
+  }
+})
+
+const beforeUnloadHandler = (event: BeforeUnloadEvent) => {
+  if (hasUnsavedChanges.value) {
+    event.preventDefault()
+    event.returnValue = ''
+  }
+}
 
 onMounted(async () => {
   // Fetch media files for the library
@@ -290,7 +329,19 @@ onMounted(async () => {
     }, 100)
     
     autoSlug.value = false
+    // After initializing, reset the flag so initial data isn't considered a change
+    setTimeout(() => {
+      hasUnsavedChanges.value = false
+    }, 100)
   }
+
+  // Start auto-save interval
+  autoSaveInterval.value = setInterval(async () => {
+    if (hasUnsavedChanges.value) {
+      await saveDraft()
+    }
+  }, 30000) // 30 seconds
+
 })
 
 // Auto-generate slug from title
@@ -372,8 +423,16 @@ const handleImageError = (event: Event) => {
   // img.src = '/path/to/placeholder.png'
 }
 
+// Save post as draft
+const saveDraft = async () => {
+  const originalStatus = formData.status
+  formData.status = 'draft'
+  await savePost(true) // Pass true to indicate this is a draft save
+  formData.status = originalStatus
+}
+
 // Save post
-const savePost = async () => {
+const savePost = async (isDraft = false) => {
   try {
     // Get content from TinyMCE editor - ensure we get the latest content
     if (editorRef.value) {
@@ -402,7 +461,8 @@ const savePost = async () => {
       excerpt: formData.excerpt,
       featured_image: formData.featured_image || undefined,
       tags: formData.tags,
-      status: formData.status
+      status: formData.status,
+      published_at: formData.publish_date ? new Date(formData.publish_date).toISOString() : undefined
     }
 
     let result
@@ -412,8 +472,13 @@ const savePost = async () => {
       result = await createPost(postData)
     }
 
-    if (result.success && result.data) {
-      emit('save', result.data)
+        if (result.success && result.data) {
+      hasUnsavedChanges.value = false;
+      window.removeEventListener('beforeunload', beforeUnloadHandler);
+      lastSaved.value = new Date();
+      if (!isDraft) {
+        emit('save', result.data);
+      }
     } else if (result.error) {
       alert(`Failed to save post: ${result.error}`)
     }
@@ -448,6 +513,17 @@ const previewPost = () => {
   }
   showPreview.value = true
 }
+
+// Handle back button - check for unsaved changes
+const handleBack = () => {
+  if (hasUnsavedChanges.value) {
+    if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
+      emit('cancel')
+    }
+  } else {
+    emit('cancel')
+  }
+}
 </script>
 
 <template>
@@ -456,13 +532,32 @@ const previewPost = () => {
     <div class="bg-white border-b border-gray-200 shadow-lg" :class="{ 'dark:bg-slate-800 dark:border-slate-700': isDarkMode }">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center py-8">
-          <div>
-            <h1 class="text-4xl font-bold" :class="isDarkMode ? 'text-white' : 'text-gray-900'">
-              {{ isEditing ? 'Edit Post' : 'Create New Post' }}
-            </h1>
-            <p class="mt-3 text-lg" :class="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-              {{ isEditing ? 'Update your blog post' : 'Create a new blog post for your website' }}
-            </p>
+          <div class="flex items-start gap-4">
+            <button
+              @click="handleBack"
+              class="mt-2 p-2 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-700"
+              :class="isDarkMode ? 'text-slate-400 hover:text-slate-300' : 'text-gray-600 hover:text-gray-800'"
+              title="Back to posts list"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <div>
+              <h1 class="text-4xl font-bold" :class="isDarkMode ? 'text-white' : 'text-gray-900'">
+                {{ isEditing ? 'Edit Post' : 'Create New Post' }}
+              </h1>
+              <p class="mt-3 text-lg" :class="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
+                {{ isEditing ? 'Update your blog post' : 'Create a new blog post for your website' }}
+              </p>
+              <div v-if="lastSaved" class="text-xs mt-2" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
+                Last saved: {{ formatDate(lastSaved.toISOString()) }}
+              </div>
+              <div class="text-xs mt-1 flex items-center" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
+                <svg class="w-4 h-4 mr-1 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Auto-save is active.
+              </div>
+            </div>
           </div>
           
           <div class="flex space-x-4">
@@ -495,7 +590,7 @@ const previewPost = () => {
             </button>
             
             <button
-              @click="savePost"
+              @click="() => savePost()"
               :disabled="isLoading || !formData.title"
               class="px-8 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold rounded-xl transition-all duration-200 hover:scale-105 disabled:hover:scale-100 shadow-lg hover:shadow-xl"
             >
@@ -548,13 +643,17 @@ const previewPost = () => {
     </div>
 
     <!-- Content Tab -->
-    <div v-if="activeTab === 'content'" class="rounded-2xl shadow-xl p-8 space-y-8 border" :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'">
+    <div v-if="activeTab === 'content'" class="rounded-2xl shadow-xl p-10 space-y-10 border" :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'">
       <!-- Title & Slug Section -->
       <div class="space-y-6">
-        <div>
-          <h3 class="text-xl font-semibold mb-4" :class="isDarkMode ? 'text-white' : 'text-gray-900'">
+        <div class="border-b pb-4" :class="isDarkMode ? 'border-slate-700' : 'border-gray-200'">
+          <h3 class="text-2xl font-bold flex items-center gap-2" :class="isDarkMode ? 'text-white' : 'text-gray-900'">
+            <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
             Post Details
           </h3>
+          <p class="mt-2 text-sm" :class="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Basic information about your blog post</p>
         </div>
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -610,14 +709,18 @@ const previewPost = () => {
 
       <!-- Featured Image Section -->
       <div class="space-y-6">
-        <div>
-          <h3 class="text-xl font-semibold mb-4" :class="isDarkMode ? 'text-white' : 'text-gray-900'">
+        <div class="border-b pb-4" :class="isDarkMode ? 'border-slate-700' : 'border-gray-200'">
+          <h3 class="text-2xl font-bold flex items-center gap-2" :class="isDarkMode ? 'text-white' : 'text-gray-900'">
+            <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
             Featured Image
           </h3>
+          <p class="mt-2 text-sm" :class="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Add a cover image for your blog post</p>
         </div>
         
         <div v-if="formData.featured_image" class="mb-4">
-          <div class="relative w-48 h-32 rounded-lg overflow-hidden border" :class="isDarkMode ? 'border-slate-600' : 'border-slate-200'">
+          <div class="relative w-full max-w-2xl h-64 rounded-xl overflow-hidden border-2 shadow-lg" :class="isDarkMode ? 'border-slate-600' : 'border-slate-200'">
             <img :src="formData.featured_image" alt="Featured image" class="w-full h-full object-cover" />
             <button
               @click="formData.featured_image = ''"
@@ -634,10 +737,10 @@ const previewPost = () => {
         <!-- Button to open Image Gallery -->
         <button
           @click="showImageLibrary = true"
-          class="px-4 py-2 border rounded-lg transition-colors flex items-center space-x-2"
+          class="px-6 py-3 border-2 rounded-xl transition-all duration-200 flex items-center space-x-2 font-medium hover:scale-105 shadow-md hover:shadow-lg"
           :class="isDarkMode 
-            ? 'border-slate-600 hover:bg-slate-700 text-white' 
-            : 'border-slate-300 hover:bg-slate-50 text-slate-700'"
+            ? 'border-slate-600 hover:bg-slate-700 text-white hover:border-slate-500' 
+            : 'border-gray-300 hover:bg-gray-50 text-gray-700 hover:border-gray-400'"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -647,13 +750,26 @@ const previewPost = () => {
       </div>
 
       <!-- Content Editor -->
-      <div>
-        <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
-          Content *
-          <span class="ml-2 text-xs" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
-            {{ wordCount }} words
-          </span>
-        </label>
+      <div class="space-y-4">
+        <div class="border-b pb-4" :class="isDarkMode ? 'border-slate-700' : 'border-gray-200'">
+          <div class="flex items-center justify-between">
+            <h3 class="text-2xl font-bold flex items-center gap-2" :class="isDarkMode ? 'text-white' : 'text-gray-900'">
+              <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Content *
+            </h3>
+            <div class="flex items-center gap-2 px-4 py-2 rounded-lg" :class="isDarkMode ? 'bg-slate-700' : 'bg-gray-100'">
+              <svg class="w-4 h-4" :class="isDarkMode ? 'text-slate-400' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span class="text-sm font-semibold" :class="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
+                {{ wordCount }} words
+              </span>
+            </div>
+          </div>
+          <p class="mt-2 text-sm" :class="isDarkMode ? 'text-slate-400' : 'text-gray-600'">Write your blog post content using the rich text editor</p>
+        </div>
         
         <!-- TinyMCE Editor -->
         <div class="border-2 rounded-xl overflow-hidden shadow-lg" :class="isDarkMode ? 'border-slate-600' : 'border-gray-300'">
@@ -668,20 +784,25 @@ const previewPost = () => {
       </div>
 
       <!-- Excerpt -->
-      <div>
-        <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
-          Excerpt
-          <span class="text-xs" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
-            (Auto-generated if empty)
-          </span>
-        </label>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-base font-semibold mb-3 flex items-center gap-2" :class="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
+            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+            Excerpt
+            <span class="text-xs font-normal" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
+              (Auto-generated if empty)
+            </span>
+          </label>
+        </div>
         <textarea
           v-model="formData.excerpt"
-          rows="3"
-          class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+          rows="4"
+          class="w-full px-6 py-4 border-2 rounded-xl focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 shadow-sm"
           :class="isDarkMode 
-            ? 'bg-slate-700 border-slate-600 text-white' 
-            : 'bg-white border-slate-300 text-slate-900'"
+            ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400 hover:border-slate-500' 
+            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 hover:border-gray-400 hover:shadow-md'"
           placeholder="Brief description of the post (max 160 characters recommended)"
         ></textarea>
         <p class="text-xs mt-1" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
@@ -690,8 +811,11 @@ const previewPost = () => {
       </div>
 
       <!-- Tags -->
-      <div>
-        <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
+      <div class="space-y-4">
+        <label class="block text-base font-semibold mb-3 flex items-center gap-2" :class="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
+          <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
           Tags
         </label>
         
@@ -711,20 +835,20 @@ const previewPost = () => {
           </span>
         </div>
         
-        <div class="flex">
+        <div class="flex gap-2">
           <input
             v-model="tagInput"
             type="text"
-            class="flex-1 px-4 py-2 border rounded-l-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            class="flex-1 px-6 py-3 border-2 rounded-xl focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 shadow-sm"
             :class="isDarkMode 
-              ? 'bg-slate-700 border-slate-600 text-white' 
-              : 'bg-white border-slate-300 text-slate-900'"
+              ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400 hover:border-slate-500' 
+              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 hover:border-gray-400 hover:shadow-md'"
             placeholder="Add a tag"
             @keypress.enter.prevent="addTag"
           />
           <button
             @click="addTag"
-            class="px-4 py-2 bg-green-600 text-white rounded-r-lg hover:bg-green-700 transition-colors"
+            class="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg hover:scale-105"
           >
             Add
           </button>
@@ -887,19 +1011,26 @@ const previewPost = () => {
 
         <!-- Publish Date -->
         <div>
-          <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
+          <label class="block text-base font-semibold mb-3 flex items-center gap-2" :class="isDarkMode ? 'text-slate-300' : 'text-gray-700'">
+            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
             Publish Date
           </label>
           <input
             v-model="formData.publish_date"
             type="datetime-local"
-            class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            class="w-full px-6 py-4 text-lg border-2 rounded-xl focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 shadow-sm cursor-pointer"
             :class="isDarkMode 
-              ? 'bg-slate-700 border-slate-600 text-white' 
-              : 'bg-white border-slate-300 text-slate-900'"
+              ? 'bg-slate-700 border-slate-600 text-white hover:border-slate-500 [color-scheme:dark]' 
+              : 'bg-white border-gray-300 text-gray-900 hover:border-gray-400 hover:shadow-md'"
+            :style="isDarkMode ? 'color-scheme: dark;' : ''"
           />
-          <p class="text-xs mt-1" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
-            Leave empty for immediate publishing
+          <p class="text-xs mt-2 flex items-center gap-1" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Leave empty for immediate publishing. You can backdate posts by selecting a past date.
           </p>
         </div>
       </div>

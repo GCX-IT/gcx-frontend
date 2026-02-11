@@ -12,6 +12,7 @@ import {
 
 const activeTab = ref(0)
 const heroImageLoaded = ref(false)
+const stepImageLoaded = ref<Record<number, boolean>>({})
 
 const steps = [
   {
@@ -63,6 +64,15 @@ const steps = [
 
 const setActiveTab = (index: number) => {
   activeTab.value = index
+  // Preload next image for smoother transitions
+  if (index < steps.length - 1) {
+    const nextImage = new Image()
+    nextImage.src = steps[index + 1].image
+  }
+}
+
+const handleStepImageLoad = (stepId: number) => {
+  stepImageLoaded.value[stepId] = true
 }
 </script>
 
@@ -145,10 +155,29 @@ const setActiveTab = (index: number) => {
           <!-- Image Frame -->
           <div class="mb-6 sm:mb-8 w-full mx-auto">
             <div class="relative w-full overflow-hidden shadow-xl bg-white" style="min-height: clamp(200px, 40vh, 600px);">
+              <!-- Loading placeholder -->
+              <div 
+                v-show="!stepImageLoaded[steps[activeTab].id]"
+                class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 animate-pulse"
+              >
+                <div class="text-center">
+                  <svg class="w-16 h-16 mx-auto text-slate-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <p class="mt-3 text-sm text-slate-500">Loading image...</p>
+                </div>
+              </div>
+              
+              <!-- Actual image with lazy loading -->
               <img 
                 :src="steps[activeTab].image" 
                 :alt="steps[activeTab].title"
-                class="w-full h-full object-contain"
+                class="w-full h-full object-contain transition-opacity duration-500"
+                :class="stepImageLoaded[steps[activeTab].id] ? 'opacity-100' : 'opacity-0'"
+                loading="lazy"
+                decoding="async"
+                @load="handleStepImageLoad(steps[activeTab].id)"
               />
             </div>
           </div>

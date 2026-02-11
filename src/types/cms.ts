@@ -44,6 +44,7 @@ export interface CreatePostRequest {
   featured_image?: string
   tags: string[]
   status: 'draft' | 'published' | 'private'
+  published_at?: string
 }
 
 export interface UpdatePostRequest extends CreatePostRequest {

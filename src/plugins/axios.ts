@@ -13,7 +13,7 @@ const BACKEND_CONFIG = {
   GO_BACKEND_URL_VPS: 'https://your-vps-domain.com', // DigitalOcean VPS - override in getBackendURL()
   GO_BACKEND_URL_VERCEL_PROXY: '', // Empty string for Vercel proxy via vercel.json rewrites
   GO_USE_NGROK: false, // Set to true for ngrok
-  GO_USE_HEROKU: false, // Set to true for Heroku
+  GO_USE_HEROKU: true, // Set to true for Heroku
   
   LARAVEL_BACKEND_URL: 'http://localhost:8000'
 }

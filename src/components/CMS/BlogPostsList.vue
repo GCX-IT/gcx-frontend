@@ -26,8 +26,6 @@ const postsPerPage = 10
 const sortBy = ref('created_at')
 const sortOrder = ref<'asc' | 'desc'>('desc')
 
-
-
 // Computed properties
 const statusOptions = [
   { value: 'all', label: 'All Posts', count: computed(() => posts.value.length) },
@@ -170,7 +168,6 @@ const clearFilters = () => {
 
 const exportPosts = () => {
   // TODO: Implement export functionality
-  // Export functionality
 }
 </script>
 
@@ -272,7 +269,7 @@ const exportPosts = () => {
       </button>
     </div>
 
-    <!-- Posts Table -->
+    <!-- Posts List -->
     <div class="rounded-2xl border-2 overflow-hidden shadow-xl" 
          :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'">
       
@@ -339,8 +336,7 @@ const exportPosts = () => {
           <tbody class="divide-y" :class="isDarkMode ? 'divide-slate-700' : 'divide-slate-200'">
             <tr v-for="post in paginatedPosts" :key="post.id" 
                 class="border-b"
-                :class="isDarkMode ? 'border-slate-600' : 'border-gray-200'"
-            >
+                :class="isDarkMode ? 'border-slate-600' : 'border-gray-200'">
               
               <!-- Title & Excerpt -->
               <td class="px-6 py-4">
@@ -367,7 +363,6 @@ const exportPosts = () => {
                         +{{ post.tags.length - 2 }}
                       </span>
                     </div>
-
                   </div>
                 </div>
               </td>

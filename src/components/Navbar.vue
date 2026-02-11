@@ -291,17 +291,33 @@ const isWideDropdown = (name: string) => name === 'About'
         <!-- Logo - Left -->
         <div class="flex items-center flex-shrink-0">
           <router-link to="/" class="flex items-center group">
-            <!-- Desktop - Main logo -->
+            <!-- Desktop - Main logo (day mode) -->
             <img 
+              v-if="!isDarkMode"
               src="/logo_black.png"
               alt="GCX Logo"
-              class="hidden sm:block h-16 w-auto transition-transform duration-300 group-hover:scale-105"
+              class="hidden sm:block h-16 w-auto transition-all duration-300 group-hover:scale-105"
             />
-            <!-- Mobile - Compact version -->
+            <!-- Desktop - Main logo (night mode) -->
             <img 
+              v-else
+              src="/GCX_logo_bk_053950-removebg-preview.png"
+              alt="GCX Logo"
+              class="hidden sm:block h-16 w-auto transition-all duration-300 group-hover:scale-105"
+            />
+            <!-- Mobile - Compact version (day mode) -->
+            <img 
+              v-if="!isDarkMode"
               src="/logo_black.png" 
               alt="GCX Logo"
-              class="block sm:hidden h-12 w-auto transition-transform duration-300 group-hover:scale-105"
+              class="block sm:hidden h-12 w-auto transition-all duration-300 group-hover:scale-105"
+            />
+            <!-- Mobile - Compact version (night mode) -->
+            <img 
+              v-else
+              src="/GCX_logo_bk_053950-removebg-preview.png" 
+              alt="GCX Logo"
+              class="block sm:hidden h-12 w-auto transition-all duration-300 group-hover:scale-105"
             />
           </router-link>
         </div>

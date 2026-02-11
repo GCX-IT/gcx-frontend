@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from '../composables/useI18n'
+import { isDarkMode } from '../utils/darkMode'
 
 const { t } = useI18n()
 // Professional footer for Ghana Commodity Exchange
@@ -14,7 +15,7 @@ const { t } = useI18n()
         <!-- Company Info & Social Media -->
         <div class="lg:col-span-1">
           <div class="flex items-center mb-6">
-            <img src="/logo_black.png" alt="GCX Logo" class="h-12 w-auto" />
+            <img src="/GCX_logo_bk_053950-removebg-preview.png" alt="GCX Logo" class="h-20 w-auto transition-all duration-300" />
           </div>
           <p class="text-white mb-8 leading-relaxed">
             The Ghana Commodity Exchange (GCX) is a licensed commodity exchange providing 

@@ -341,7 +341,7 @@ onMounted(async () => {
     </div>
 
     <!-- Market Summary Cards -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div class="p-6 rounded-xl border transition-all duration-200 hover:shadow-xl hover:scale-[1.02]" :class="isDarkMode ? 'border-slate-700 bg-slate-800 hover:bg-slate-750' : 'border-slate-200 bg-white hover:bg-slate-50'">
         <div class="flex items-center justify-between">
           <div>
@@ -390,17 +390,6 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div class="p-6 rounded-xl border transition-all duration-200 hover:shadow-xl hover:scale-[1.02]" :class="isDarkMode ? 'border-slate-700 bg-slate-800 hover:bg-slate-750' : 'border-slate-200 bg-white hover:bg-slate-50'">
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-sm font-medium" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">Market Status</div>
-            <div class="text-2xl font-bold text-green-500">OPEN</div>
-          </div>
-          <div class="p-3 rounded-xl bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg">
-            <div class="w-3 h-3 bg-white rounded-full animate-pulse shadow-sm"></div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Filters and Search -->

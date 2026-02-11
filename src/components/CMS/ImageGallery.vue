@@ -26,10 +26,10 @@
       />
     </div>
 
-    <!-- Compact Gallery Grid (3 images max) -->
+    <!-- Gallery Grid -->
     <div class="grid grid-cols-3 gap-4 mb-4">
       <div
-        v-for="(image, index) in displayImages"
+        v-for="(image, index) in (showAllImages ? filteredImages : displayImages)"
         :key="image.id || image.url"
         @click="selectImage(image)"
         class="relative group rounded-lg overflow-hidden border-2 transition-all duration-200 hover:shadow-lg cursor-pointer"
@@ -88,6 +88,13 @@
                 <i class="pi pi-eye text-sm"></i>
               </button>
               <button
+                @click.stop="copyImageUrl(image)"
+                class="p-2 bg-blue-500/90 hover:bg-blue-500 text-white rounded-full shadow-lg transition-colors"
+                title="Copy URL"
+              >
+                <i class="pi pi-copy text-sm"></i>
+              </button>
+              <button
                 @click.stop="downloadImage(image)"
                 class="p-2 bg-white/90 hover:bg-white text-slate-700 rounded-full shadow-lg transition-colors"
                 title="Download"
@@ -117,15 +124,15 @@
       </div>
     </div>
 
-    <!-- View All Button -->
+    <!-- View All/Show Less Button -->
     <div v-if="filteredImages.length > 3" class="text-center mb-4">
       <button
-        @click.stop="openFullGallery"
+        @click.stop="toggleShowAll"
         class="px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 mx-auto"
         :class="isDarkMode ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' : 'bg-green-100 hover:bg-green-200 text-green-700'"
       >
-        <i class="pi pi-images"></i>
-        <span>View All Images ({{ filteredImages.length }})</span>
+        <i :class="showAllImages ? 'pi pi-chevron-up' : 'pi pi-images'"></i>
+        <span>{{ showAllImages ? 'Show Less' : `View All Images (${filteredImages.length})` }}</span>
       </button>
     </div>
 
@@ -525,6 +532,7 @@ const showImageViewer = ref(false)
 const viewingImage = ref<ImageItem | null>(null)
 const showFullGallery = ref(false)
 const fullGallerySearch = ref('')
+const showAllImages = ref(false)
 
 // Computed
 const filteredImages = computed(() => {
@@ -819,6 +827,31 @@ const deleteImage = async (image: ImageItem) => {
       alert('Failed to delete image. Please try again.')
     }
   }
+}
+
+const copyImageUrl = async (image: ImageItem) => {
+  try {
+    await navigator.clipboard.writeText(image.url)
+    alert('Image URL copied to clipboard!')
+  } catch (error) {
+    console.error('Failed to copy URL:', error)
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea')
+    textArea.value = image.url
+    document.body.appendChild(textArea)
+    textArea.select()
+    try {
+      document.execCommand('copy')
+      alert('Image URL copied to clipboard!')
+    } catch (err) {
+      alert('Failed to copy URL. Please copy manually: ' + image.url)
+    }
+    document.body.removeChild(textArea)
+  }
+}
+
+const toggleShowAll = () => {
+  showAllImages.value = !showAllImages.value
 }
 
 
