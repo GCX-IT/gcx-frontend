@@ -15,7 +15,7 @@ import {
 } from 'chart.js'
 import zoomPlugin from 'chartjs-plugin-zoom'
 import { globalMarketData, globalLoading, globalError, refreshMarketData, getHistoricalData } from '../../utils/marketDataUtils'
-import type { ProcessedMarketData } from '../../services/marketDataService'
+import { marketDataService, type ProcessedMarketData } from '../../services/marketDataService'
 
 // Register Chart.js components
 ChartJS.register(
@@ -46,6 +46,7 @@ interface DisplayCommodity {
   type: string
   category: string
   grade?: string
+  historicalData?: Array<{ closing: number | string; sessionDate: string; high?: number | string; low?: number | string; opening?: number | string }>
 }
 
 // Market data state - use global state
@@ -98,17 +99,18 @@ const getCommodityType = (commodityName: string): string => {
   return 'Other'
 }
 
-// Get commodity tabs in specific order (only for commodities that exist in data)
+// Get commodity tabs - only for commodities that actually have data
 const commodityTabs = computed(() => {
   const groups = groupCommoditiesByType(commodities.value)
   const tabOrder = ['White Maize', 'Yellow Maize', 'Soya Bean', 'Rice', 'Sesame', 'Sorghum']
   const tabs: Array<{ key: string; label: string }> = []
   
+  // Only add tabs for commodities that have actual data
   tabOrder.forEach(type => {
     if (groups[type] && groups[type].length > 0) {
       tabs.push({
         key: toTabKey(type),
-        label: type
+        label: `${type}`
       })
     }
   })
@@ -118,7 +120,7 @@ const commodityTabs = computed(() => {
     if (!tabOrder.includes(type) && type !== 'Other' && groups[type].length > 0) {
       tabs.push({
         key: toTabKey(type),
-        label: type
+        label: `${type} (${groups[type].length})`
       })
     }
   })
@@ -126,12 +128,22 @@ const commodityTabs = computed(() => {
   return tabs
 })
 
-// Get filtered commodities based on selected tab
+// Get filtered commodities based on selected tab - sorted by latest trade date (newest first)
 const filteredCommodities = computed(() => {
   const groups = groupCommoditiesByType(commodities.value)
   const tabType = Object.keys(groups).find(type => toTabKey(type) === selectedTab.value)
   
-  return tabType ? groups[tabType] : []
+  if (!tabType) {
+    return commodities.value
+  }
+  
+  // Get commodities for this type and sort by date (newest first)
+  const typeData = groups[tabType] || []
+  return typeData.sort((a, b) => {
+    const dateA = parseDate(a.lastUpdate) || new Date(0)
+    const dateB = parseDate(b.lastUpdate) || new Date(0)
+    return dateB.getTime() - dateA.getTime() // Newest first
+  })
 })
 
 // Helper function to parse dates more robustly (moved before convertToDisplayFormat)
@@ -261,11 +273,27 @@ const convertToDisplayFormat = (data: ProcessedMarketData[]): DisplayCommodity[]
       volume: getVolume(item.Symbol),
       lastUpdate: formatTradeDate(item.LastTradeDate),
       trend: item.isPositiveChange ? 'up' : (parseFloat(item.PriceChange) < 0 ? 'down' : 'neutral'),
-      type: getContractType(item.Symbol),
+      type: getCommodityType(item.Commodity),
       category: getCommodityCategory(item.Commodity),
-      grade: getGrade(item)
+      grade: getGrade(item),
+      historicalData: item.historicalData // Include historical data for charts
     }
   })
+}
+
+// Load all symbols with latest trades from PHP endpoint
+const loadLatestTradedSymbols = async () => {
+  try {
+    // Get all symbols sorted by latest trade date (no limit)
+    const latestData = await marketDataService.getCurrentMarketData()
+    console.log('✅ Loaded market data from PHP endpoint:', latestData.length, 'symbols')
+    console.log('Commodities:', [...new Set(latestData.map(d => d.Commodity))])
+    commodities.value = convertToDisplayFormat(latestData)
+    console.log('Converted to display format:', commodities.value.length, 'items')
+  } catch (error) {
+    console.error('Failed to load latest traded symbols:', error)
+    commodities.value = []
+  }
 }
 
 // Convert global market data to display format
@@ -280,11 +308,37 @@ const updateMarketData = () => {
 
 const selectedCommodity = ref<DisplayCommodity | null>(null)
 const selectedTimeRange = ref<'3M' | '6M' | '1Y'>('3M')
-const selectedTab = ref<string>(toTabKey('White Maize'))
+const selectedTab = ref<string>(toTabKey('Yellow Maize'))
 
 // Get real historical data for charts
 const getRealPriceData = async (symbol: string, timeRange: '3M' | '6M' | '1Y' = '3M') => {
   try {
+    // First, try to get historical data from already-loaded market data
+    const marketDataItem = commodities.value.find(c => c.symbol === symbol)
+    
+    if (marketDataItem && marketDataItem.historicalData && marketDataItem.historicalData.length > 0) {
+      console.log(`✅ Using embedded historical data for ${symbol}`)
+      
+      // Use embedded historical data
+      const historicalPrices = marketDataItem.historicalData
+      
+      // Limit based on time range
+      let limitedData = historicalPrices
+      if (timeRange === '3M') {
+        limitedData = historicalPrices.slice(-90)
+      } else if (timeRange === '6M') {
+        limitedData = historicalPrices.slice(-180)
+      }
+      // 1Y uses all data
+      
+      return limitedData.map((price: any) => ({
+        time: new Date(price.sessionDate).toLocaleDateString('en-GH', { month: 'short', day: 'numeric' }),
+        price: parseFloat(price.closing)
+      }))
+    }
+    
+    // Fallback: use getHistoricalData if embedded data not available
+    console.log(`⚠️  No embedded data for ${symbol}, fetching from API...`)
     const period = timeRange === '3M' ? '3M' : timeRange === '6M' ? '6M' : '1Y'
     const historicalData = await getHistoricalData(symbol, period)
     
@@ -293,7 +347,8 @@ const getRealPriceData = async (symbol: string, timeRange: '3M' | '6M' | '1Y' = 
       price: price
     }))
   } catch (error) {
-    // Fallback to basic data if historical data fails
+    console.warn(`⚠️  Failed to fetch historical data for ${symbol}:`, error)
+    // Return minimal data - single point
     return [{
       time: new Date().toLocaleDateString('en-GH', { month: 'short', day: 'numeric' }),
       price: selectedCommodity.value?.closingPrice || 0
@@ -342,53 +397,42 @@ const loadChartData = async () => {
     }
     
   } catch (error) {
+    console.warn('Failed to fetch real historical data, using simulated data:', error)
     
-    // Fallback: create a realistic chart with price variations
+    // Fallback: create a chart based on the actual current price
     if (selectedCommodity.value) {
       const currentPrice = selectedCommodity.value.closingPrice
       const basePrice = typeof currentPrice === 'string' ? parseFloat(currentPrice) : currentPrice
       
+      console.log(`📈 Generating simulated chart for ${selectedCommodity.value.symbol} with base price: ${basePrice}`)
       
-      // Generate a realistic price trend over time
-      const days = 30 // Show last 30 days for better trend visualization
+      // Generate simulated price trend centered around the current price
+      const days = 30 // Show last 30 days
       const labels = []
       const data = []
-      const high = []
-      const low = []
-      const open = []
-      const close = []
       
-      // Start with a base price and create a realistic trend
-      let currentTrend = basePrice
-      const trendDirection = Math.random() > 0.5 ? 1 : -1 // Random trend direction
-      const volatility = basePrice * 0.05 // 5% volatility
+      // Create a trend that ends at the current price
+      let currentTrend = basePrice * 0.95 // Start 5% below current
+      const volatility = basePrice * 0.03 // 3% volatility
       
       for (let i = days; i >= 0; i--) {
         const date = new Date()
         date.setDate(date.getDate() - i)
         labels.push(date.toLocaleDateString('en-GH', { month: 'short', day: 'numeric' }))
         
-        // Create realistic price movement
-        const dailyChange = (Math.random() - 0.5) * volatility * 0.3 // Daily variation
-        const trendComponent = trendDirection * (volatility * 0.1) * (days - i) / days // Gradual trend
-        const randomWalk = (Math.random() - 0.5) * volatility * 0.2 // Random walk component
+        // Smooth trend towards current price for realistic look
+        const progressTowardsCurrent = (days - i) / days // 0 to 1 as we approach today
+        const targetPrice = basePrice * (0.95 + 0.1 * progressTowardsCurrent) // Trend from -5% to +5%
         
-        currentTrend += dailyChange + trendComponent + randomWalk
+        // Add realistic variation
+        const randomVariation = (Math.random() - 0.5) * volatility
+        currentTrend = targetPrice + randomVariation
         
-        // Ensure price doesn't go negative
-        currentTrend = Math.max(currentTrend, basePrice * 0.5)
-        
-        // Create OHLC data for more realistic chart
-        const dayHigh = currentTrend + (Math.random() * volatility * 0.3)
-        const dayLow = currentTrend - (Math.random() * volatility * 0.3)
-        const dayOpen = i === days ? currentTrend : data[data.length - 1] // Previous close or current
-        const dayClose = currentTrend
+        // Ensure it stays reasonable
+        currentTrend = Math.max(currentTrend, basePrice * 0.8)
+        currentTrend = Math.min(currentTrend, basePrice * 1.2)
         
         data.push(Math.round(currentTrend * 100) / 100)
-        high.push(Math.round(dayHigh * 100) / 100)
-        low.push(Math.round(dayLow * 100) / 100)
-        open.push(Math.round(dayOpen * 100) / 100)
-        close.push(Math.round(dayClose * 100) / 100)
       }
       
       chartData.value = {
@@ -401,12 +445,11 @@ const loadChartData = async () => {
             backgroundColor: isDarkMode.value ? 'rgba(34, 197, 94, 0.15)' : 'rgba(22, 163, 74, 0.15)',
             borderWidth: 3,
             fill: true,
-            tension: 0.1,
-            pointRadius: 2,
-            pointHoverRadius: 4,
-            pointBackgroundColor: isDarkMode.value ? '#22c55e' : '#16a34a',
-            pointBorderColor: '#ffffff',
-            pointBorderWidth: 1
+            tension: 0.4, // Smoother curve
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            pointBackgroundColor: 'transparent',
+            pointBorderColor: 'transparent'
           }
         ]
       }
@@ -576,9 +619,10 @@ const refreshData = async () => {
 watch(globalMarketData, () => {
   updateMarketData()
   if (commodities.value.length > 0 && !selectedCommodity.value) {
-    // Default to White Maize if available, otherwise first commodity
-    const whiteMaize = commodities.value.find(c => c.type === 'White Maize')
-    selectedCommodity.value = whiteMaize || commodities.value[0]
+    // Default to GTUYM2 if available, otherwise any Yellow Maize, otherwise first commodity
+    const gtuym2 = commodities.value.find(c => c.symbol === 'GTUYM2')
+    const yellowMaize = commodities.value.find(c => c.type === 'Yellow Maize')
+    selectedCommodity.value = gtuym2 || yellowMaize || commodities.value[0]
   }
 }, { immediate: true })
 
@@ -586,8 +630,13 @@ watch(commodityTabs, (tabs) => {
   if (tabs.length === 0) {
     return
   }
-  if (!tabs.some(tab => tab.key === selectedTab.value)) {
-    selectedTab.value = tabs[0].key
+  // Check if current selectedTab exists in tabs
+  const tabExists = tabs.some(tab => tab.key === selectedTab.value)
+  
+  if (!tabExists) {
+    // Try to find Yellow Maize tab first, otherwise use first available
+    const yellowMaizeTab = tabs.find(tab => tab.key === 'yellow_maize')
+    selectedTab.value = yellowMaizeTab ? yellowMaizeTab.key : tabs[0].key
   }
 }, { immediate: true })
 
@@ -607,19 +656,26 @@ watch(selectedTimeRange, () => {
 
 // Lifecycle hooks
 onMounted(() => {
-  updateMarketData()
+  loadLatestTradedSymbols()
   
-  // Set selected commodity to White Maize if available, otherwise first one
+  // Set selected commodity to GTUYM2 if available, otherwise any Yellow Maize, otherwise first one
   if (commodities.value.length > 0) {
-    const whiteMaize = commodities.value.find(c => c.type === 'White Maize')
-    selectedCommodity.value = whiteMaize || commodities.value[0]
+    const gtuym2 = commodities.value.find(c => c.symbol === 'GTUYM2')
+    const yellowMaize = commodities.value.find(c => c.type === 'Yellow Maize')
+    selectedCommodity.value = gtuym2 || yellowMaize || commodities.value[0]
   }
 })
 
 // Watch for tab changes and update selected commodity
 const selectFirstCommodityInTab = () => {
   if (filteredCommodities.value.length > 0) {
-    selectedCommodity.value = filteredCommodities.value[0]
+    // For Yellow Maize, prioritize GTUYM2 if available
+    if (selectedTab.value === 'yellow_maize') {
+      const gtuym2 = filteredCommodities.value.find(c => c.symbol === 'GTUYM2')
+      selectedCommodity.value = gtuym2 || filteredCommodities.value[0]
+    } else {
+      selectedCommodity.value = filteredCommodities.value[0]
+    }
   }
 }
 
@@ -647,15 +703,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Quick Stats -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div class="p-4 rounded-xl border text-center transition-all duration-200 hover:shadow-lg" :class="isDarkMode ? 'border-slate-700 bg-slate-800 hover:bg-slate-750' : 'border-slate-200 bg-white hover:bg-slate-50'">
-          <div class="text-sm font-medium" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">Total Contracts</div>
-          <div class="text-xl font-bold text-green-500">{{ commodities.length }}</div>
-        </div>
-        <div class="p-4 rounded-xl border text-center transition-all duration-200 hover:shadow-lg" :class="isDarkMode ? 'border-slate-700 bg-slate-800 hover:bg-slate-750' : 'border-slate-200 bg-white hover:bg-slate-50'">
-          <div class="text-sm font-medium" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">Active Contracts</div>
-          <div class="text-xl font-bold" :class="isDarkMode ? 'text-white' : 'text-slate-900'">{{ commodities.length }}</div>
-        </div>
+      <div class="flex justify-center gap-4 mb-8 flex-wrap max-w-2xl mx-auto">
         <div class="p-4 rounded-xl border text-center transition-all duration-200 hover:shadow-lg" :class="isDarkMode ? 'border-slate-700 bg-slate-800 hover:bg-slate-750' : 'border-slate-200 bg-white hover:bg-slate-50'">
           <div class="text-sm font-medium" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">Commodities</div>
           <div class="text-xl font-bold" :class="isDarkMode ? 'text-white' : 'text-slate-900'">6</div>
@@ -675,7 +723,7 @@ onUnmounted(() => {
 
             <!-- Commodity Type Tabs -->
             <div v-if="!isLoading && !error && commodities.length > 0" class="mb-6">
-              <div class="flex space-x-1 border-b" :class="isDarkMode ? 'border-slate-600' : 'border-slate-200'">
+              <div class="flex space-x-1 border-b overflow-x-auto" :class="isDarkMode ? 'border-slate-600' : 'border-slate-200'">
                 <button
                   v-for="tab in commodityTabs"
                   :key="tab.key"

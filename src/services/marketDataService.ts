@@ -15,6 +15,21 @@ export interface ClosingPriceData {
   Symbol: string
 }
 
+export interface HistoricalPricePoint {
+  closing: string | number
+  high: string | number
+  low: string | number
+  opening: string | number
+  sessionDate: string
+}
+
+export interface ServerResponse {
+  symbol: string
+  closingPrices: HistoricalPricePoint[]
+  lastTradeDate: string
+  success: string
+}
+
 export interface CommoditySymbolData {
   Commodity: string
   DeliveryCentre: string
@@ -34,6 +49,9 @@ export interface ProcessedMarketData extends ClosingPriceData {
   priceChangePercent?: number
   formattedPrice?: string
   isPositiveChange?: boolean
+  latestPrice?: number
+  latestDate?: string
+  historicalData?: HistoricalPricePoint[]
 }
 
 class MarketDataService {
@@ -93,7 +111,131 @@ class MarketDataService {
   }
 
   /**
-   * Fetch closing prices from Firebase with caching
+   * Fetch current market data from Firebase server_responses endpoint (2026 data)
+   * This endpoint contains all historical data including the latest 2026 prices
+   */
+  async getCurrentMarketData(): Promise<ProcessedMarketData[]> {
+    try {
+      console.log('📡 Fetching market data from Firebase server_responses...')
+      
+      // Fetch from Firebase server_responses which contains historical data with 2026 dates
+      const response = await this.axiosInstance.get<Record<string, ServerResponse>>(
+        `${FIREBASE_BASE_URL}/server_responses.json`
+      )
+      
+      console.log(`📊 Received ${Object.keys(response.data).length} records from server_responses`)
+      
+      // Use a Map to deduplicate by symbol - keep only the latest trade per symbol
+      const symbolMap = new Map<string, ProcessedMarketData>()
+      const commodityTypes = new Set<string>()
+      let totalRecords = 0
+      let processedRecords = 0
+      
+      Object.entries(response.data).forEach(([key, serverResp]) => {
+        totalRecords++
+        
+        if (serverResp && serverResp.symbol && serverResp.closingPrices && Array.isArray(serverResp.closingPrices) && serverResp.closingPrices.length > 0) {
+          processedRecords++
+          
+          // Sort closing prices by sessionDate to get the most recent
+          const sortedPrices = [...serverResp.closingPrices].sort((a, b) => {
+            return new Date(b.sessionDate).getTime() - new Date(a.sessionDate).getTime()
+          })
+          
+          const latestPrice = sortedPrices[0]
+          const commodity = this.extractCommodityName(serverResp.symbol)
+          commodityTypes.add(commodity)
+          
+          console.log(`✅ Symbol: ${serverResp.symbol}, Commodity: ${commodity}, Latest Date: ${latestPrice.sessionDate}, Price: ${latestPrice.closing}`)
+          
+          const processed: ProcessedMarketData = {
+            Symbol: serverResp.symbol,
+            ClosingPrice: String(latestPrice.closing),
+            Commodity: commodity,
+            HighPrice: String(latestPrice.high || latestPrice.closing),
+            LowPrice: String(latestPrice.low || latestPrice.closing),
+            OpeningPrice: String(latestPrice.opening || latestPrice.closing),
+            LastTradeDate: latestPrice.sessionDate,
+            PriceChange: '0',
+            priceChangePercent: 0,
+            formattedPrice: this.formatPrice(String(latestPrice.closing)),
+            isPositiveChange: true,
+            latestPrice: Number(latestPrice.closing),
+            latestDate: latestPrice.sessionDate,
+            historicalData: sortedPrices // Include all historical data sorted newest first
+          }
+          
+          // Only keep if this symbol doesn't exist yet, or if this one has a newer trade date
+          const existing = symbolMap.get(serverResp.symbol)
+          if (!existing || new Date(processed.latestDate).getTime() > new Date(existing.latestDate || '').getTime()) {
+            symbolMap.set(serverResp.symbol, processed)
+          }
+        }
+      })
+      
+      console.log(`📈 Processed: ${processedRecords}/${totalRecords} records with ${commodityTypes.size} unique commodity types`)
+      
+      // Convert Map to array and sort by latest trade date (most recent first)
+      const processedData = Array.from(symbolMap.values())
+      processedData.sort((a, b) => {
+        const dateA = new Date(a.latestDate || '').getTime()
+        const dateB = new Date(b.latestDate || '').getTime()
+        return dateB - dateA
+      })
+      
+      console.log(`✅ Final: ${processedData.length} symbols with ${commodityTypes.size} commodity types`)
+      console.log(`🌾 Commodities: ${Array.from(commodityTypes).join(', ')}`)
+      console.log(`📅 Latest trades: ${processedData.slice(0, 5).map(d => `${d.Symbol} (${d.latestDate})`).join(', ')}`)
+      
+      if (processedData.length === 0) {
+        throw new Error('No market data found in Firebase')
+      }
+      
+      return processedData
+    } catch (error) {
+      console.error('❌ Failed to fetch current market data:', error)
+      throw new Error('Failed to fetch market data. Please try again later.')
+    }
+  }
+
+  /**
+   * Get symbols with latest trades (for moving ticker)
+   */
+  async getLatestTradedSymbols(limit: number = 10): Promise<ProcessedMarketData[]> {
+    try {
+      const allData = await this.getCurrentMarketData()
+      return allData.slice(0, limit)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  /**
+   * Extract commodity name from symbol
+   */
+  private extractCommodityName(symbol: string): string {
+    const commodityMap: Record<string, string> = {
+      'WM': 'White Maize',
+      'YM': 'Yellow Maize',
+      'R': 'Rice',
+      'SS': 'Sesame',
+      'SB': 'Soya Bean',
+      'SH': 'Shea Nuts',
+      'SG': 'Sorghum'
+    }
+    
+    // Try to extract commodity code from symbol (e.g., GAPWM2 -> WM)
+    for (const [code, name] of Object.entries(commodityMap)) {
+      if (symbol.includes(code)) {
+        return name
+      }
+    }
+    
+    return 'Commodity'
+  }
+
+  /**
+   * Fetch closing prices from Firebase with caching (legacy)
    */
   async getClosingPrices(): Promise<MarketDataResponse> {
     // Try to get from cache first

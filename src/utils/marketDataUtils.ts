@@ -34,7 +34,13 @@ export const loadMarketData = async (): Promise<ProcessedMarketData[]> => {
     globalLoading.value = true
     globalError.value = null
     
-    const data = await marketDataService.getCombinedMarketData()
+    console.log('🔄 Loading market data from Firebase...')
+    
+    // Use getCurrentMarketData which fetches from server_responses (latest 2026 data)
+    const data = await marketDataService.getCurrentMarketData()
+    
+    console.log(`✅ Loaded ${data.length} market data items`)
+    
     globalMarketData.value = data
     globalLastUpdated.value = new Date().toLocaleTimeString('en-GH', {
       hour: '2-digit',
@@ -45,6 +51,7 @@ export const loadMarketData = async (): Promise<ProcessedMarketData[]> => {
     return data
   } catch (err) {
     globalError.value = err instanceof Error ? err.message : 'Failed to load market data'
+    console.error('❌ Error loading market data:', err)
     throw err
   } finally {
     globalLoading.value = false

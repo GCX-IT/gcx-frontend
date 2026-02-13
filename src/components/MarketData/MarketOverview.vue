@@ -48,7 +48,7 @@ const marketStats = computed(() => {
   }
 })
 
-// All commodities in a single array
+// All commodities in a single array - sorted by date (latest first)
 const allCommodities = computed(() => {
   let commodities = marketData.value.flatMap(cat => cat.commodities)
   
@@ -69,7 +69,19 @@ const allCommodities = computed(() => {
     )
   }
   
-  return commodities.sort((a, b) => a.symbol.localeCompare(b.symbol))
+  // Sort by trade date (latest first), then by symbol
+  return commodities.sort((a, b) => {
+    // Parse dates - assume if date parsing fails, it's an older date
+    const dateA = a.lastTradeDate ? parseDate(a.lastTradeDate) : new Date('1970-01-01')
+    const dateB = b.lastTradeDate ? parseDate(b.lastTradeDate) : new Date('1970-01-01')
+    
+    // Sort descending (latest first)
+    const dateDiff = (dateB?.getTime() || 0) - (dateA?.getTime() || 0)
+    if (dateDiff !== 0) return dateDiff
+    
+    // If dates are the same, sort by symbol
+    return a.symbol.localeCompare(b.symbol)
+  })
 })
 
 // Filtered data (for backward compatibility)
@@ -262,16 +274,67 @@ const loadMarketData = async () => {
     loading.value = true
     error.value = null
     
-    const [data, statistics] = await Promise.all([
-      marketDataService.getCombinedMarketData(),
-      marketDataService.getMarketStatistics()
+    console.log('📡 Loading complete market data from Firebase...')
+    
+    // Fetch from 3 sources:
+    // 1. server_responses - has 27 commodities with latest 2026 prices and dates
+    // 2. closing_prices - has remaining ~30 commodities with older prices
+    // 3. commodity_symbols - has Grade and DeliveryCentre for all
+    const [recentPrices, closingPrices, symbolData] = await Promise.all([
+      marketDataService.getCurrentMarketData().catch(() => []),
+      marketDataService.getClosingPrices().catch(() => ({ data: {} })),
+      marketDataService.getCommoditySymbols().catch(() => ({}))
     ])
     
-    const commodities = data.map(convertToCommodity)
+    console.log(`✅ Loaded ${recentPrices.length} commodities from server_responses (2026 data)`)
+    console.log(`✅ Loaded ${Object.keys(closingPrices.data || {}).length} commodities from closing_prices`)
+    console.log(`✅ Loaded ${Object.keys(symbolData).length} symbol info from commodity_symbols`)
+    
+    // Build a map of all commodities - prefer server_responses (newer), fall back to closing_prices
+    const allCommoditiesMap = new Map()
+    
+    // Add recent prices first (2026 data)
+    recentPrices.forEach(item => {
+      const enriched = {
+        ...item,
+        Grade: symbolData[item.Symbol]?.Grade || item.Grade,
+        DeliveryCentre: symbolData[item.Symbol]?.DeliveryCentre || item.DeliveryCentre
+      }
+      allCommoditiesMap.set(item.Symbol, enriched)
+    })
+    
+    // Add closing prices for any symbols not already in map
+    Object.entries(closingPrices.data || {}).forEach(([symbol, priceData]) => {
+      if (!allCommoditiesMap.has(symbol)) {
+        const enriched = {
+          Symbol: symbol,
+          ClosingPrice: priceData.ClosingPrice,
+          Commodity: priceData.Commodity,
+          HighPrice: priceData.HighPrice,
+          LowPrice: priceData.LowPrice,
+          OpeningPrice: priceData.OpeningPrice,
+          LastTradeDate: priceData.LastTradeDate,
+          PriceChange: priceData.PriceChange,
+          Grade: symbolData[symbol]?.Grade,
+          DeliveryCentre: symbolData[symbol]?.DeliveryCentre
+        }
+        allCommoditiesMap.set(symbol, enriched)
+      }
+    })
+    
+    // Convert to array and sort by date
+    const allData = Array.from(allCommoditiesMap.values())
+    allData.sort((a, b) => {
+      const dateA = a.LastTradeDate ? new Date(a.LastTradeDate).getTime() : 0
+      const dateB = b.LastTradeDate ? new Date(b.LastTradeDate).getTime() : 0
+      return dateB - dateA // Latest first
+    })
+    
+    const commodities = allData.map(convertToCommodity)
     marketData.value = groupCommoditiesByCategory(commodities)
     lastUpdated.value = new Date().toLocaleString()
     
-    console.log(`✅ Loaded ${commodities.length} commodities for market overview`)
+    console.log(`✅ Total: ${commodities.length} commodities for market overview (27 recent + ${commodities.length - 27} older)`)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load market data'
     console.error('❌ Market overview loading error:', err)
@@ -463,20 +526,21 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr :class="isDarkMode ? 'bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700' : 'bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200'">
-                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Symbol</th>
-              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Commodity</th>
-              <th class="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Grade</th>
-              <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Delivery Centre</th>
-                <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Price (GHC)</th>
-                <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Change</th>
-                <th class="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Trend</th>
-                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Last Trade Date</th>
-              </tr>
-            </thead>
+        <div class="overflow-hidden">
+          <div class="overflow-y-auto custom-scrollbar">
+            <table class="w-full border-collapse">
+              <thead class="sticky top-0 z-20">
+                <tr :class="isDarkMode ? 'bg-slate-900 border-b border-slate-700' : 'bg-slate-50 border-b border-slate-200'">
+                  <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider sticky top-0" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Symbol</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider sticky top-0" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Commodity</th>
+                  <th class="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider sticky top-0" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Grade</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider sticky top-0" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Delivery Centre</th>
+                  <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider sticky top-0" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Price (GHC)</th>
+                  <th class="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider sticky top-0" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Change</th>
+                  <th class="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider sticky top-0" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Trend</th>
+                  <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider sticky top-0" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Last Trade Date</th>
+                </tr>
+              </thead>
             <tbody>
               <tr
               v-for="item in allCommodities"
@@ -554,9 +618,9 @@ onMounted(async () => {
               </tr>
             </tbody>
           </table>
-      </div>
+          </div>
+        </div>
     </div>
-
 
     <!-- Selected Commodity Details -->
     <div v-if="selectedCommodity" class="mt-6">

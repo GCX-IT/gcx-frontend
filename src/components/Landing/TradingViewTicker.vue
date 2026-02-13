@@ -4,7 +4,7 @@ import { useI18n } from '../../composables/useI18n'
 import { isDarkMode } from '../../utils/darkMode'
 import { useTickerVisibility } from '../../composables/useTickerVisibility'
 import { globalMarketData, globalLoading, globalError, refreshMarketData } from '../../utils/marketDataUtils'
-import type { ProcessedMarketData } from '../../services/marketDataService'
+import { marketDataService, type ProcessedMarketData } from '../../services/marketDataService'
 
 interface TickerCommodity {
   symbol: string
@@ -50,26 +50,19 @@ const getDefaultAvatar = (commodity: string): { avatar: string; color: string } 
 
 // Convert Firebase data to ticker format
 const convertToTickerFormat = (data: ProcessedMarketData[]): TickerCommodity[] => {
-  // Get the most recent and actively traded commodities
-  const prioritySymbols = ['GAPWM2', 'GAPYM2', 'GEJWM2', 'GSAWM2', 'GKUWM2', 'GKUYM2', 'GTAYSB2', 'GWAYSB2']
+  // Show all commodities in the ticker, not just the top 10
+  // This ensures we see a variety of all available commodities
   
-  // Filter and prioritize the data
-  const priorityData = data.filter(item => prioritySymbols.includes(item.Symbol))
-  const remainingData = data.filter(item => !prioritySymbols.includes(item.Symbol))
-  
-  // Combine priority items first, then fill with remaining
-  const selectedData = [...priorityData, ...remainingData].slice(0, 8)
-  
-  return selectedData.map(item => {
+  return data.map(item => {
     const avatarInfo = commodityAvatars[item.Commodity] || getDefaultAvatar(item.Commodity)
     
-    // Format the last trade date for this commodity
-    const formattedDate = formatTradeDate(item.LastTradeDate)
+    // Format the latest trade date for this commodity
+    const formattedDate = formatTradeDate(item.latestDate || item.LastTradeDate)
     
     return {
       symbol: item.Symbol,
       name: item.Commodity,
-      price: parseFloat(item.ClosingPrice) || 0,
+      price: item.latestPrice || parseFloat(item.ClosingPrice) || 0,
       change: parseFloat(item.PriceChange) || 0,
       changePercent: item.priceChangePercent || 0,
       volume: formatVolume(item.Symbol),
@@ -168,26 +161,25 @@ const formatTradeDate = (dateString: string): string => {
   }
 }
 
-// Convert global market data to ticker format
-const updateTickerData = () => {
-  if (globalMarketData.value.length > 0) {
-    commodities.value = convertToTickerFormat(globalMarketData.value)
-  } else {
-    // No data available
+// Load all latest traded symbols from PHP endpoint
+const loadLatestTradedSymbols = async () => {
+  try {
+    // Get all symbols sorted by latest trade date (no limit)
+    const latestData = await marketDataService.getCurrentMarketData()
+    console.log('🎯 Ticker loaded:', latestData.length, 'commodities')
+    console.log('📊 Commodities in ticker:', latestData.map(d => `${d.Symbol} (${d.Commodity})`).join(', '))
+    commodities.value = convertToTickerFormat(latestData)
+    console.log('✅ Ticker display items:', commodities.value.length)
+  } catch (error) {
+    console.error('Failed to load latest traded symbols:', error)
     commodities.value = []
   }
 }
 
 // Manual refresh function
 const refreshData = async () => {
-  await refreshMarketData()
-  updateTickerData()
+  await loadLatestTradedSymbols()
 }
-
-// Watch for changes in global market data
-watch(globalMarketData, () => {
-  updateTickerData()
-}, { immediate: true })
 
 const isPaused = ref(false)
 const { isTickerVisible: isVisible } = useTickerVisibility()
@@ -233,7 +225,7 @@ const formatPrice = (price: number) => {
 
 // Lifecycle hooks
 onMounted(() => {
-  updateTickerData()
+  loadLatestTradedSymbols()
 })
 </script>
 
@@ -272,7 +264,7 @@ onMounted(() => {
       <!-- Ticker Container -->
       <div 
         v-else-if="commodities.length > 0"
-        class="flex items-center py-1.5 px-4 space-x-3 md:space-x-4 ticker-scroll h-full"
+        class="flex items-center py-1.5 px-4 space-x-2 ticker-scroll h-full"
         :class="{ 'ticker-paused': isPaused }"
         @mouseenter="pauseScrolling"
         @mouseleave="resumeScrolling"
@@ -281,7 +273,7 @@ onMounted(() => {
         <div 
           v-for="commodity in commodities" 
           :key="commodity.symbol"
-          class="flex items-center space-x-1.5 md:space-x-2 flex-shrink-0 group cursor-pointer transition-all duration-200 rounded-md px-2 py-1 border backdrop-blur-sm"
+          class="flex items-center space-x-1 flex-shrink-0 group cursor-pointer transition-all duration-200 rounded-md px-2 py-0.5 border backdrop-blur-sm"
           :class="isDarkMode 
             ? 'hover:bg-slate-800/80 border-slate-700/50 bg-slate-900/50' 
             : 'hover:bg-slate-50/80 border-slate-200/50 bg-white/50'"
@@ -443,7 +435,7 @@ onMounted(() => {
 }
 
 .ticker-scroll {
-  animation: ticker-scroll 30s linear infinite;
+  animation: ticker-scroll 120s linear infinite;
   width: max-content;
 }
 
