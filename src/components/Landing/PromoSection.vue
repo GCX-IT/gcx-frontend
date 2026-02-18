@@ -34,9 +34,9 @@ const promoCards = [
     title: 'Free SHS Feeding Program',
     subtitle: 'Social Impact Initiative',
     description: 'Supporting Ghana\'s Education Sector',
-    details: 'Supporting Ghana\'s education sector by providing quality food supplies to Senior High Schools. Suppliers can apply to participate in this impactful program.',
+        details: 'Supporting Ghana\'s education sector by providing quality food supplies to Senior High Schools. Suppliers can apply to participate in this impactful program.',
     cta: 'Apply as Supplier',
-    ctaLink: 'http://188.166.159.42:8012/',
+    ctaLink: 'https://freeshs.gcxapps.net/',
     isExternal: true,
     icon: AcademicCapIcon,
     highlights: [

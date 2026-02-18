@@ -273,7 +273,7 @@ onBeforeUnmount(() => {
             <!-- Mobile CTA Buttons -->
             <div class="flex flex-col gap-3 px-4 mb-6">
               <a
-                href="http://188.166.159.42:8012/" 
+                href="https://freeshs.gcxapps.net/" 
                 target="_blank"
                 rel="noopener noreferrer"
                 class="w-full inline-flex items-center justify-center bg-green-500 hover:bg-green-400 text-white font-bold py-3 px-6 rounded-lg text-sm transition-all shadow-lg"
@@ -362,7 +362,7 @@ onBeforeUnmount(() => {
                       </div>
                       
                       <a
-                        href="http://188.166.159.42:8012/" 
+                        href="https://freeshs.gcxapps.net/" 
                         target="_blank"
                         rel="noopener noreferrer"
                         class="relative z-50 w-full inline-flex items-center justify-center bg-green-500 hover:bg-green-400 text-white font-bold py-5 px-8 rounded-xl transition-all transform hover:scale-105 shadow-lg text-lg cursor-pointer"

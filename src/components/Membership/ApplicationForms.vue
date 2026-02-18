@@ -210,7 +210,7 @@ import { isDarkMode } from '../../utils/darkMode'
         </div>
 
         <div class="mt-6">
-          <a href="http://188.166.159.42:8012/" target="_blank" rel="noopener noreferrer"
+          <a href="https://freeshs.gcxapps.net/" target="_blank" rel="noopener noreferrer"
              class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105"
              :class="isDarkMode ? 'bg-orange-600 hover:bg-orange-500 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
