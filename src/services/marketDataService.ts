@@ -1,7 +1,10 @@
 import axios from 'axios'
 
-// Firebase endpoint base URL
+// Firebase endpoint base URL for legacy data (2020-2024)
 const FIREBASE_BASE_URL = 'https://sserp-gcx-webservices-default-rtdb.firebaseio.com/7fc5499a-eccb-4bab-aa52-6ac0269a9dc3/marketdata'
+
+// Note: This uses legacy Firebase endpoints (closing_prices.json and commodity_symbols.json)
+// which contain data from 2020-2024. For more current data, consider using server_responses endpoint.
 
 // Market Data Types
 export interface ClosingPriceData {
@@ -111,89 +114,25 @@ class MarketDataService {
   }
 
   /**
-   * Fetch current market data from Firebase server_responses endpoint (2026 data)
-   * This endpoint contains all historical data including the latest 2026 prices
+   * Fetch closing prices from Firebase with caching
    */
-  async getCurrentMarketData(): Promise<ProcessedMarketData[]> {
+  async getClosingPrices(): Promise<MarketDataResponse> {
+    // Try to get from cache first
+    const cached = this.getFromCache<MarketDataResponse>(this.CACHE_KEY_CLOSING_PRICES)
+    if (cached) {
+      return cached.data
+    }
+
     try {
-      console.log('📡 Fetching market data from Firebase server_responses...')
-      
-      // Fetch from Firebase server_responses which contains historical data with 2026 dates
-      const response = await this.axiosInstance.get<Record<string, ServerResponse>>(
-        `${FIREBASE_BASE_URL}/server_responses.json`
+      const response = await this.axiosInstance.get<MarketDataResponse>(
+        `${FIREBASE_BASE_URL}/closing_prices.json`
       )
       
-      console.log(`📊 Received ${Object.keys(response.data).length} records from server_responses`)
+      // Save to cache
+      this.saveToCache(this.CACHE_KEY_CLOSING_PRICES, response.data)
       
-      // Use a Map to deduplicate by symbol - keep only the latest trade per symbol
-      const symbolMap = new Map<string, ProcessedMarketData>()
-      const commodityTypes = new Set<string>()
-      let totalRecords = 0
-      let processedRecords = 0
-      
-      Object.entries(response.data).forEach(([key, serverResp]) => {
-        totalRecords++
-        
-        if (serverResp && serverResp.symbol && serverResp.closingPrices && Array.isArray(serverResp.closingPrices) && serverResp.closingPrices.length > 0) {
-          processedRecords++
-          
-          // Sort closing prices by sessionDate to get the most recent
-          const sortedPrices = [...serverResp.closingPrices].sort((a, b) => {
-            return new Date(b.sessionDate).getTime() - new Date(a.sessionDate).getTime()
-          })
-          
-          const latestPrice = sortedPrices[0]
-          const commodity = this.extractCommodityName(serverResp.symbol)
-          commodityTypes.add(commodity)
-          
-          console.log(`✅ Symbol: ${serverResp.symbol}, Commodity: ${commodity}, Latest Date: ${latestPrice.sessionDate}, Price: ${latestPrice.closing}`)
-          
-          const processed: ProcessedMarketData = {
-            Symbol: serverResp.symbol,
-            ClosingPrice: String(latestPrice.closing),
-            Commodity: commodity,
-            HighPrice: String(latestPrice.high || latestPrice.closing),
-            LowPrice: String(latestPrice.low || latestPrice.closing),
-            OpeningPrice: String(latestPrice.opening || latestPrice.closing),
-            LastTradeDate: latestPrice.sessionDate,
-            PriceChange: '0',
-            priceChangePercent: 0,
-            formattedPrice: this.formatPrice(String(latestPrice.closing)),
-            isPositiveChange: true,
-            latestPrice: Number(latestPrice.closing),
-            latestDate: latestPrice.sessionDate,
-            historicalData: sortedPrices // Include all historical data sorted newest first
-          }
-          
-          // Only keep if this symbol doesn't exist yet, or if this one has a newer trade date
-          const existing = symbolMap.get(serverResp.symbol)
-          if (!existing || new Date(processed.latestDate).getTime() > new Date(existing.latestDate || '').getTime()) {
-            symbolMap.set(serverResp.symbol, processed)
-          }
-        }
-      })
-      
-      console.log(`📈 Processed: ${processedRecords}/${totalRecords} records with ${commodityTypes.size} unique commodity types`)
-      
-      // Convert Map to array and sort by latest trade date (most recent first)
-      const processedData = Array.from(symbolMap.values())
-      processedData.sort((a, b) => {
-        const dateA = new Date(a.latestDate || '').getTime()
-        const dateB = new Date(b.latestDate || '').getTime()
-        return dateB - dateA
-      })
-      
-      console.log(`✅ Final: ${processedData.length} symbols with ${commodityTypes.size} commodity types`)
-      console.log(`🌾 Commodities: ${Array.from(commodityTypes).join(', ')}`)
-      console.log(`📅 Latest trades: ${processedData.slice(0, 5).map(d => `${d.Symbol} (${d.latestDate})`).join(', ')}`)
-      
-      if (processedData.length === 0) {
-        throw new Error('No market data found in Firebase')
-      }
-      
-      return processedData
+      return response.data
     } catch (error) {
-      console.error('❌ Failed to fetch current market data:', error)
       throw new Error('Failed to fetch market data. Please try again later.')
     }
   }
@@ -308,23 +247,96 @@ class MarketDataService {
           Grade: symbolInfo?.Grade,
           priceChangePercent,
           formattedPrice: this.formatPrice(priceData.ClosingPrice),
-          isPositiveChange: priceChange >= 0
+          isPositiveChange: priceChange >= 0,
+          latestPrice: parseFloat(priceData.ClosingPrice) || 0,
+          latestDate: priceData.LastTradeDate || new Date().toISOString().split('T')[0]
         }
 
         combinedData.push(processedData)
       })
 
-      // Sort by commodity name and then by delivery centre
+      // Sort by latest trade date (most recent first)
       combinedData.sort((a, b) => {
-        if (a.Commodity !== b.Commodity) {
-          return a.Commodity.localeCompare(b.Commodity)
-        }
-        return (a.DeliveryCentre || '').localeCompare(b.DeliveryCentre || '')
+        const dateA = new Date(a.latestDate || '').getTime()
+        const dateB = new Date(b.latestDate || '').getTime()
+        return dateB - dateA
       })
 
       return combinedData
     } catch (error) {
       throw error
+    }
+  }
+
+  /**
+   * Fetch current market data from legacy Firebase endpoints
+   * Uses closing_prices.json and commodity_symbols.json endpoints
+   */
+  async getCurrentMarketData(): Promise<ProcessedMarketData[]> {
+    try {
+      // Fetch from legacy endpoints (closing_prices and commodity_symbols)
+      const [closingPricesResponse, commoditySymbols] = await Promise.all([
+        this.getClosingPrices(),
+        this.getCommoditySymbols()
+      ])
+      
+      // Use a Map to deduplicate by symbol - keep only the latest trade per symbol
+      const symbolMap = new Map<string, ProcessedMarketData>()
+      const commodityTypes = new Set<string>()
+      let totalRecords = 0
+      let processedRecords = 0
+      
+      Object.entries(closingPricesResponse.data).forEach(([symbol, priceData]) => {
+        totalRecords++
+        
+        if (priceData && priceData.Symbol && priceData.ClosingPrice) {
+          processedRecords++
+          const commodity = this.extractCommodityName(priceData.Symbol)
+          commodityTypes.add(commodity)
+          
+          const symbolInfo = commoditySymbols[symbol]
+          
+          // Calculate price change percentage
+          const openingPrice = parseFloat(priceData.OpeningPrice) || 0
+          const priceChange = parseFloat(priceData.PriceChange) || 0
+          const priceChangePercent = openingPrice > 0 ? (priceChange / openingPrice) * 100 : 0
+
+          const processed: ProcessedMarketData = {
+            Symbol: priceData.Symbol,
+            ClosingPrice: priceData.ClosingPrice,
+            Commodity: commodity,
+            HighPrice: priceData.HighPrice || priceData.ClosingPrice,
+            LowPrice: priceData.LowPrice || priceData.ClosingPrice,
+            OpeningPrice: priceData.OpeningPrice || priceData.ClosingPrice,
+            LastTradeDate: priceData.LastTradeDate || new Date().toISOString().split('T')[0],
+            PriceChange: priceData.PriceChange || '0',
+            DeliveryCentre: symbolInfo?.DeliveryCentre,
+            Grade: symbolInfo?.Grade,
+            priceChangePercent,
+            formattedPrice: this.formatPrice(priceData.ClosingPrice),
+            isPositiveChange: priceChange >= 0,
+            latestPrice: parseFloat(priceData.ClosingPrice) || 0,
+            latestDate: priceData.LastTradeDate || new Date().toISOString().split('T')[0]
+          }
+          
+          // Only keep if this symbol doesn't exist yet, or if this one has a newer trade date
+          const existing = symbolMap.get(priceData.Symbol)
+          if (!existing || new Date(processed.latestDate).getTime() > new Date(existing.latestDate || '').getTime()) {
+            symbolMap.set(priceData.Symbol, processed)
+          }
+        }
+      })
+      
+      // Convert Map to array
+      const processedData = Array.from(symbolMap.values())
+      
+      if (processedData.length === 0) {
+        throw new Error('No market data found in Firebase legacy endpoints')
+      }
+      
+      return processedData
+    } catch (error) {
+      throw new Error('Failed to fetch market data. Please try again later.')
     }
   }
 

@@ -281,17 +281,13 @@ const convertToDisplayFormat = (data: ProcessedMarketData[]): DisplayCommodity[]
   })
 }
 
-// Load all symbols with latest trades from PHP endpoint
+// Load all symbols with latest trades from legacy Firebase endpoints
 const loadLatestTradedSymbols = async () => {
   try {
     // Get all symbols sorted by latest trade date (no limit)
     const latestData = await marketDataService.getCurrentMarketData()
-    console.log('✅ Loaded market data from PHP endpoint:', latestData.length, 'symbols')
-    console.log('Commodities:', [...new Set(latestData.map(d => d.Commodity))])
     commodities.value = convertToDisplayFormat(latestData)
-    console.log('Converted to display format:', commodities.value.length, 'items')
   } catch (error) {
-    console.error('Failed to load latest traded symbols:', error)
     commodities.value = []
   }
 }
@@ -317,8 +313,6 @@ const getRealPriceData = async (symbol: string, timeRange: '3M' | '6M' | '1Y' = 
     const marketDataItem = commodities.value.find(c => c.symbol === symbol)
     
     if (marketDataItem && marketDataItem.historicalData && marketDataItem.historicalData.length > 0) {
-      console.log(`✅ Using embedded historical data for ${symbol}`)
-      
       // Use embedded historical data
       const historicalPrices = marketDataItem.historicalData
       
@@ -338,7 +332,6 @@ const getRealPriceData = async (symbol: string, timeRange: '3M' | '6M' | '1Y' = 
     }
     
     // Fallback: use getHistoricalData if embedded data not available
-    console.log(`⚠️  No embedded data for ${symbol}, fetching from API...`)
     const period = timeRange === '3M' ? '3M' : timeRange === '6M' ? '6M' : '1Y'
     const historicalData = await getHistoricalData(symbol, period)
     
@@ -347,7 +340,6 @@ const getRealPriceData = async (symbol: string, timeRange: '3M' | '6M' | '1Y' = 
       price: price
     }))
   } catch (error) {
-    console.warn(`⚠️  Failed to fetch historical data for ${symbol}:`, error)
     // Return minimal data - single point
     return [{
       time: new Date().toLocaleDateString('en-GH', { month: 'short', day: 'numeric' }),
@@ -397,14 +389,10 @@ const loadChartData = async () => {
     }
     
   } catch (error) {
-    console.warn('Failed to fetch real historical data, using simulated data:', error)
-    
     // Fallback: create a chart based on the actual current price
     if (selectedCommodity.value) {
       const currentPrice = selectedCommodity.value.closingPrice
       const basePrice = typeof currentPrice === 'string' ? parseFloat(currentPrice) : currentPrice
-      
-      console.log(`📈 Generating simulated chart for ${selectedCommodity.value.symbol} with base price: ${basePrice}`)
       
       // Generate simulated price trend centered around the current price
       const days = 30 // Show last 30 days

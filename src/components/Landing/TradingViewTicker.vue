@@ -156,7 +156,6 @@ const formatTradeDate = (dateString: string): string => {
       year: 'numeric'
     })
   } catch (error) {
-    console.error('Error formatting trade date:', error)
     return ''
   }
 }
@@ -166,12 +165,8 @@ const loadLatestTradedSymbols = async () => {
   try {
     // Get all symbols sorted by latest trade date (no limit)
     const latestData = await marketDataService.getCurrentMarketData()
-    console.log('🎯 Ticker loaded:', latestData.length, 'commodities')
-    console.log('📊 Commodities in ticker:', latestData.map(d => `${d.Symbol} (${d.Commodity})`).join(', '))
     commodities.value = convertToTickerFormat(latestData)
-    console.log('✅ Ticker display items:', commodities.value.length)
   } catch (error) {
-    console.error('Failed to load latest traded symbols:', error)
     commodities.value = []
   }
 }
@@ -435,7 +430,7 @@ onMounted(() => {
 }
 
 .ticker-scroll {
-  animation: ticker-scroll 120s linear infinite;
+  animation: ticker-scroll 180s linear infinite;
   width: max-content;
 }
 

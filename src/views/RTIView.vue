@@ -13,6 +13,7 @@ const applicationForm = ref({
   fullName: '',
   email: '',
   phone: '',
+  idNumber: '',
   address: '',
   organization: '',
   informationType: '',
@@ -36,13 +37,29 @@ const submitApplication = async () => {
   submissionError.value = false
   errorMessage.value = ''
   
+  // Validate required fields
+  if (!applicationForm.value.idNumber || applicationForm.value.idNumber.trim() === '') {
+    submissionError.value = true
+    errorMessage.value = 'Ghana Card Number or National ID is required'
+    isSubmitting.value = false
+    return
+  }
+  
+  if (!applicationForm.value.address || applicationForm.value.address.trim() === '') {
+    submissionError.value = true
+    errorMessage.value = 'Address is required'
+    isSubmitting.value = false
+    return
+  }
+  
   try {
     // Submit RTI request
     const response = await rtiService.submitRequest({
       full_name: applicationForm.value.fullName,
       email: applicationForm.value.email,
       phone: applicationForm.value.phone,
-      address: applicationForm.value.address || undefined,
+      id_number: applicationForm.value.idNumber.trim(),
+      address: applicationForm.value.address,
       organization: applicationForm.value.organization || undefined,
       request_type: applicationForm.value.informationType,
       subject: applicationForm.value.purpose,
@@ -58,6 +75,7 @@ const submitApplication = async () => {
       full_name: applicationForm.value.fullName,
       email: applicationForm.value.email,
       phone: applicationForm.value.phone,
+      id_number: applicationForm.value.idNumber.trim(),
       address: applicationForm.value.address,
       organization: applicationForm.value.organization,
       request_type: applicationForm.value.informationType,
@@ -77,6 +95,7 @@ const submitApplication = async () => {
         fullName: '',
         email: '',
         phone: '',
+        idNumber: '',
         address: '',
         organization: '',
         informationType: '',
@@ -225,15 +244,31 @@ onMounted(() => {
               </div>
               <div>
                 <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
-                  Address
+                  Ghana Card Number or National ID *
                 </label>
                 <input
-                  v-model="applicationForm.address"
+                  v-model="applicationForm.idNumber"
                   type="text"
+                  required
+                  placeholder="e.g., GHA-123456789-0 or National ID"
                   class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                   :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-slate-900'"
                 />
               </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
+                Address *
+              </label>
+              <input
+                v-model="applicationForm.address"
+                type="text"
+                required
+                placeholder="Enter your full address"
+                class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-slate-900'"
+              />
             </div>
 
             <div>
@@ -279,10 +314,11 @@ onMounted(() => {
 
             <div>
               <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
-                Preferred Format
+                Preferred Format *
               </label>
               <select
                 v-model="applicationForm.preferredFormat"
+                required
                 class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-slate-900'"
               >

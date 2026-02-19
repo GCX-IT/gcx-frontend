@@ -41,7 +41,8 @@ export interface RTIApplicationData {
   full_name: string
   email: string
   phone: string
-  address?: string
+  id_number: string
+  address: string
   organization?: string
   request_type: string
   subject: string
@@ -619,16 +620,22 @@ class EmailService {
                 <a href="tel:${applicationData.phone}" style="color: #10b981; text-decoration: none;">${applicationData.phone}</a>
               </td>
             </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; color: #475569;">Ghana Card Number/National ID:</td>
+              <td style="padding: 8px 0; color: #1e293b;">${applicationData.id_number}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; color: #475569;">Ghana Card Number/National ID:</td>
+              <td style="padding: 8px 0; color: #1e293b;">${applicationData.id_number}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; color: #475569;">Address:</td>
+              <td style="padding: 8px 0; color: #1e293b;">${applicationData.address}</td>
+            </tr>
             ${applicationData.organization ? `
             <tr>
               <td style="padding: 8px 0; font-weight: bold; color: #475569;">Organization:</td>
               <td style="padding: 8px 0; color: #1e293b;">${applicationData.organization}</td>
-            </tr>
-            ` : ''}
-            ${applicationData.address ? `
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold; color: #475569;">Address:</td>
-              <td style="padding: 8px 0; color: #1e293b;">${applicationData.address}</td>
             </tr>
             ` : ''}
           </table>

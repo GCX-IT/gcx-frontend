@@ -64,7 +64,6 @@ const { t } = useI18n()
             <li><router-link to="/membership" class="text-white transition-colors hover:text-yellow-400">{{ t('navigation.menu.membership') }}</router-link></li>
             <li><router-link to="/market-data" class="text-white transition-colors hover:text-yellow-400">{{ t('navigation.menu.marketData') }}</router-link></li>
             <li><router-link to="/commodities" class="text-white transition-colors hover:text-yellow-400">Commodities</router-link></li>
-            <li><router-link to="/about" class="text-white transition-colors hover:text-yellow-400">GCX Certification Program</router-link></li>
             <li><router-link to="/careers" class="text-white transition-colors hover:text-yellow-400">Careers</router-link></li>
             <li><router-link to="/blog" class="text-white transition-colors hover:text-yellow-400">Media</router-link></li>
             <li><router-link to="/contact" class="text-white transition-colors hover:text-yellow-400">Contact Us</router-link></li>

@@ -6,7 +6,8 @@ export interface RTIRequest {
   full_name: string
   email: string
   phone: string
-  address?: string
+  id_number: string
+  address: string
   organization?: string
   request_type: string
   subject: string
@@ -32,7 +33,8 @@ export interface CreateRTIRequest {
   full_name: string
   email: string
   phone: string
-  address?: string
+  id_number: string
+  address: string
   organization?: string
   request_type: string
   subject: string

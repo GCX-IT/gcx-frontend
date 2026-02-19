@@ -166,6 +166,7 @@
                 <div class="text-sm font-medium" :class="isDarkMode ? 'text-white' : 'text-slate-900'">{{ request.full_name }}</div>
                 <div class="text-xs" :class="isDarkMode ? 'text-slate-500' : 'text-slate-500'">{{ request.email }}</div>
                 <div class="text-xs" :class="isDarkMode ? 'text-slate-500' : 'text-slate-500'">{{ request.phone }}</div>
+                <div v-if="request.id_number" class="text-xs" :class="isDarkMode ? 'text-slate-500' : 'text-slate-500'">ID: {{ request.id_number }}</div>
               </td>
               <td class="px-6 py-4">
                 <div class="text-sm" :class="isDarkMode ? 'text-slate-300' : 'text-slate-900'">{{ request.subject }}</div>
@@ -326,6 +327,8 @@
             <div><strong>Name:</strong> {{ selectedRequest.full_name }}</div>
             <div><strong>Email:</strong> {{ selectedRequest.email }}</div>
             <div><strong>Phone:</strong> {{ selectedRequest.phone }}</div>
+            <div><strong>Ghana Card Number/National ID:</strong> {{ selectedRequest.id_number || 'N/A' }}</div>
+            <div><strong>Address:</strong> {{ selectedRequest.address || 'N/A' }}</div>
             <div><strong>Organization:</strong> {{ selectedRequest.organization || 'N/A' }}</div>
           </div>
         </div>
