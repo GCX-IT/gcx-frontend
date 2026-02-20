@@ -43,12 +43,24 @@ const formatTimeAgo = (dateString: string): string => {
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
   
   if (diffInSeconds < 60) return 'Just now'
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`
-  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)} weeks ago`
-  if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)} months ago`
-  return `${Math.floor(diffInSeconds / 31536000)} years ago`
+  
+  const minutes = Math.floor(diffInSeconds / 60)
+  if (diffInSeconds < 3600) return `${minutes} ${minutes === 1 ? 'min' : 'mins'} ago`
+  
+  const hours = Math.floor(diffInSeconds / 3600)
+  if (diffInSeconds < 86400) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`
+  
+  const days = Math.floor(diffInSeconds / 86400)
+  if (diffInSeconds < 604800) return `${days} ${days === 1 ? 'day' : 'days'} ago`
+  
+  const weeks = Math.floor(diffInSeconds / 604800)
+  if (diffInSeconds < 2592000) return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`
+  
+  const months = Math.floor(diffInSeconds / 2592000)
+  if (diffInSeconds < 31536000) return `${months} ${months === 1 ? 'month' : 'months'} ago`
+  
+  const years = Math.floor(diffInSeconds / 31536000)
+  return `${years} ${years === 1 ? 'year' : 'years'} ago`
 }
 
 const retryFetch = async () => {
