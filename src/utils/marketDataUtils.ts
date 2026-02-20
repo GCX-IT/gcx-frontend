@@ -147,7 +147,7 @@ export const getUniqueDeliveryCentres = (): string[] => {
 /**
  * Get historical data for charts
  */
-export const getHistoricalData = async (symbol: string, period: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' = '3M') => {
+export const getHistoricalData = async (symbol: string, period: '1M' | '3M' | '1Y' = '3M') => {
   return await marketDataService.getHistoricalData(symbol, period)
 }
 

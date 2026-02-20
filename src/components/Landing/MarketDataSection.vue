@@ -128,7 +128,7 @@ const commodityTabs = computed(() => {
   return tabs
 })
 
-// Get filtered commodities based on selected tab - sorted by latest trade date (newest first)
+// Get filtered commodities based on selected tab and grade - sorted by latest trade date (newest first)
 const filteredCommodities = computed(() => {
   const groups = groupCommoditiesByType(commodities.value)
   const tabType = Object.keys(groups).find(type => toTabKey(type) === selectedTab.value)
@@ -137,8 +137,19 @@ const filteredCommodities = computed(() => {
     return commodities.value
   }
   
-  // Get commodities for this type and sort by date (newest first)
-  const typeData = groups[tabType] || []
+  // Get commodities for this type
+  let typeData = groups[tabType] || []
+  
+  // Filter by selected grade if a grade is selected
+  if (selectedGrade.value) {
+    typeData = typeData.filter(item => {
+      const itemGrade = (item.grade || '').toUpperCase().trim()
+      const selectedGradeUpper = selectedGrade.value?.toUpperCase().trim()
+      return itemGrade === selectedGradeUpper
+    })
+  }
+  
+  // Sort by date (newest first)
   return typeData.sort((a, b) => {
     const dateA = parseDate(a.lastUpdate) || new Date(0)
     const dateB = parseDate(b.lastUpdate) || new Date(0)
@@ -303,11 +314,12 @@ const updateMarketData = () => {
 }
 
 const selectedCommodity = ref<DisplayCommodity | null>(null)
-const selectedTimeRange = ref<'3M' | '6M' | '1Y'>('3M')
+const selectedTimeRange = ref<'1M' | '3M' | '1Y'>('3M')
 const selectedTab = ref<string>(toTabKey('Yellow Maize'))
+const selectedGrade = ref<string | null>(null) // Filter by grade (e.g., '1', '2', '3', '4')
 
 // Get real historical data for charts
-const getRealPriceData = async (symbol: string, timeRange: '3M' | '6M' | '1Y' = '3M') => {
+const getRealPriceData = async (symbol: string, timeRange: '1M' | '3M' | '1Y' = '3M') => {
   try {
     // First, try to get historical data from already-loaded market data
     const marketDataItem = commodities.value.find(c => c.symbol === symbol)
@@ -318,10 +330,10 @@ const getRealPriceData = async (symbol: string, timeRange: '3M' | '6M' | '1Y' = 
       
       // Limit based on time range
       let limitedData = historicalPrices
-      if (timeRange === '3M') {
+      if (timeRange === '1M') {
+        limitedData = historicalPrices.slice(-30)
+      } else if (timeRange === '3M') {
         limitedData = historicalPrices.slice(-90)
-      } else if (timeRange === '6M') {
-        limitedData = historicalPrices.slice(-180)
       }
       // 1Y uses all data
       
@@ -331,9 +343,8 @@ const getRealPriceData = async (symbol: string, timeRange: '3M' | '6M' | '1Y' = 
       }))
     }
     
-    // Fallback: use getHistoricalData if embedded data not available
-    const period = timeRange === '3M' ? '3M' : timeRange === '6M' ? '6M' : '1Y'
-    const historicalData = await getHistoricalData(symbol, period)
+    // Use getHistoricalData which now handles caching and filtering
+    const historicalData = await getHistoricalData(symbol, timeRange)
     
     return historicalData.data.map((price, index) => ({
       time: historicalData.labels[index],
@@ -540,6 +551,8 @@ const chartOptions = computed(() => ({
 // Select commodity
 const selectCommodity = (commodity: DisplayCommodity) => {
   selectedCommodity.value = commodity
+  // Update selected grade filter to match the selected commodity's grade
+  selectedGrade.value = commodity.grade || null
 }
 
 const gradeVariants = computed(() => {
@@ -571,9 +584,24 @@ const selectGradeVariant = (commodity: DisplayCommodity) => {
   if (selectedTab.value !== typeKey) {
     selectedTab.value = typeKey
   }
+  
+  // Set the selected grade filter
+  selectedGrade.value = commodity.grade || null
+  
+  // Select the commodity
   selectedCommodity.value = commodity
+  
   // Reload chart data when grade changes
   loadChartData()
+}
+
+// Clear grade filter (show all grades)
+const clearGradeFilter = () => {
+  selectedGrade.value = null
+  // If there are filtered commodities, select the first one
+  if (filteredCommodities.value.length > 0) {
+    selectedCommodity.value = filteredCommodities.value[0]
+  }
 }
 
 // Get price change class
@@ -663,6 +691,8 @@ onMounted(() => {
 
 // Watch for tab changes and update selected commodity
 const selectFirstCommodityInTab = () => {
+  // Clear grade filter when tab changes
+  selectedGrade.value = null
   if (filteredCommodities.value.length > 0) {
     // For Yellow Maize, prioritize GTUYM2 if available
     if (selectedTab.value === 'yellow_maize') {
@@ -869,12 +899,24 @@ onUnmounted(() => {
 
             <!-- Grade Variants -->
             <div v-if="selectedCommodity && gradeVariants.length > 1" class="flex flex-wrap justify-center gap-2 mb-4">
+              <!-- "All Grades" button to clear filter -->
+              <button
+                v-if="selectedGrade"
+                @click="clearGradeFilter"
+                class="px-4 py-2 text-sm font-semibold rounded-lg border-2 transition-all duration-200 min-w-[80px]"
+                :class="isDarkMode 
+                  ? 'border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-slate-500 hover:text-white' 
+                  : 'border-slate-300 text-slate-700 hover:bg-slate-100 hover:border-slate-400 hover:text-slate-900'"
+              >
+                All Grades
+              </button>
+              <!-- Grade buttons -->
               <button
                 v-for="variant in gradeVariants"
                 :key="variant.grade"
                 @click="selectGradeVariant(variant.commodity)"
                 class="px-4 py-2 text-sm font-semibold rounded-lg border-2 transition-all duration-200 min-w-[80px]"
-                :class="(variant.commodity.symbol === selectedCommodity.symbol || variant.grade === selectedCommodity.grade)
+                :class="(variant.commodity.symbol === selectedCommodity.symbol || variant.grade === selectedCommodity.grade || selectedGrade === variant.grade)
                   ? (isDarkMode 
                       ? 'bg-red-600 border-red-500 text-white shadow-lg shadow-red-500/50 scale-105' 
                       : 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/30 scale-105')
@@ -890,9 +932,9 @@ onUnmounted(() => {
             <div v-if="selectedCommodity" class="flex justify-center mb-4">
               <div class="flex rounded-lg border overflow-hidden" :class="isDarkMode ? 'border-slate-600' : 'border-slate-300'">
                 <button
-                  v-for="range in ['3M', '6M', '1Y']"
+                  v-for="range in ['1M', '3M', '1Y']"
                   :key="range"
-                  @click="selectedTimeRange = range as '3M' | '6M' | '1Y'"
+                  @click="selectedTimeRange = range as '1M' | '3M' | '1Y'"
                   class="px-4 py-2 text-sm font-medium transition-all duration-200"
                   :class="selectedTimeRange === range 
                     ? 'bg-red-600 text-white' 

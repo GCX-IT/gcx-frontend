@@ -43,11 +43,20 @@ export interface ServerResponse {
   symbol: string
 }
 
+interface CachedYearlyData {
+  data: HistoricalPricePoint[]
+  symbol: string
+  timestamp: number
+  lastTradeDate: string
+}
+
 class FirebaseServerService {
   private readonly axiosInstance: AxiosInstance
   private readonly POLL_INTERVAL = 1000 // 1 second
   private readonly MAX_POLL_ATTEMPTS = 30 // 30 seconds max wait time
   private readonly REQUEST_TIMEOUT = 35000 // 35 seconds total timeout
+  private readonly CACHE_DURATION = 6 * 60 * 60 * 1000 // 6 hours cache duration
+  private readonly CACHE_KEY_PREFIX = 'gcx_firebase_yearly_data_'
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -137,7 +146,97 @@ class FirebaseServerService {
   }
 
   /**
+   * Delete request from Firebase server_requests endpoint
+   */
+  private async deleteRequest(requestorId: string, postId: string): Promise<void> {
+    try {
+      const url = `${FIREBASE_BASE_URL}/server_requests/${requestorId}/${postId}.json`
+      await this.axiosInstance.delete(url)
+    } catch (error) {
+      // Silently fail - cleanup is best effort
+      console.warn('Failed to delete request from Firebase:', error)
+    }
+  }
+
+  /**
+   * Delete response from Firebase server_responses endpoint
+   */
+  private async deleteResponse(requestorId: string, postId: string): Promise<void> {
+    try {
+      const url = `${FIREBASE_BASE_URL}/server_responses/${requestorId}/${postId}.json`
+      await this.axiosInstance.delete(url)
+    } catch (error) {
+      // Silently fail - cleanup is best effort
+      console.warn('Failed to delete response from Firebase:', error)
+    }
+  }
+
+  /**
+   * Cleanup request and response from Firebase after successful fetch
+   */
+  private async cleanupFirebaseData(requestorId: string, postId: string): Promise<void> {
+    // Delete both request and response in parallel
+    await Promise.all([
+      this.deleteRequest(requestorId, postId),
+      this.deleteResponse(requestorId, postId)
+    ])
+  }
+
+  /**
+   * Get cached yearly data for a symbol
+   */
+  private getCachedYearlyData(symbol: string): CachedYearlyData | null {
+    try {
+      const cacheKey = `${this.CACHE_KEY_PREFIX}${symbol}`
+      const cached = localStorage.getItem(cacheKey)
+      if (!cached) return null
+
+      const parsed: CachedYearlyData = JSON.parse(cached)
+      const now = Date.now()
+      
+      // Check if cache is still valid
+      if (now - parsed.timestamp > this.CACHE_DURATION) {
+        localStorage.removeItem(cacheKey)
+        return null
+      }
+
+      // Verify it's for the same symbol
+      if (parsed.symbol !== symbol) {
+        localStorage.removeItem(cacheKey)
+        return null
+      }
+
+      return parsed
+    } catch (error) {
+      // If cache is corrupted, remove it
+      const cacheKey = `${this.CACHE_KEY_PREFIX}${symbol}`
+      localStorage.removeItem(cacheKey)
+      return null
+    }
+  }
+
+  /**
+   * Cache yearly data for a symbol
+   */
+  private cacheYearlyData(symbol: string, data: HistoricalPricePoint[], lastTradeDate: string): void {
+    try {
+      const cacheKey = `${this.CACHE_KEY_PREFIX}${symbol}`
+      const cacheData: CachedYearlyData = {
+        data,
+        symbol,
+        timestamp: Date.now(),
+        lastTradeDate
+      }
+      localStorage.setItem(cacheKey, JSON.stringify(cacheData))
+    } catch (error) {
+      // Silently fail - caching is best effort
+      console.warn('Failed to cache yearly data:', error)
+    }
+  }
+
+  /**
    * Get ticker information (historical closing prices) for a symbol
+   * Always fetches 1 year of data and caches it
    * 
    * @param symbol - The commodity symbol (e.g., "GEJYM2")
    * @param asAtDate - Optional date filter (e.g., "Last Traded: 18-Feb-2026")
@@ -150,6 +249,7 @@ class FirebaseServerService {
     onProgress?: (attempt: number, maxAttempts: number) => void
   ): Promise<ServerResponse> {
     const requestorId = this.generateRequestorId()
+    let postId: string | null = null
     
     const request: ServerRequest = {
       header: {
@@ -164,13 +264,30 @@ class FirebaseServerService {
 
     try {
       // Step 1: POST the request
-      const postId = await this.postRequest(requestorId, request)
+      postId = await this.postRequest(requestorId, request)
       
       // Step 2: Poll for the response
       const response = await this.pollForResponse(requestorId, postId, onProgress)
       
+      // Step 3: Cleanup Firebase data (request and response)
+      if (postId) {
+        await this.cleanupFirebaseData(requestorId, postId)
+      }
+      
+      // Step 4: Cache the yearly data
+      if (response.closingPrices && response.closingPrices.length > 0) {
+        this.cacheYearlyData(symbol, response.closingPrices, response.lastTradeDate)
+      }
+      
       return response
     } catch (error) {
+      // Try to cleanup even on error
+      if (postId) {
+        await this.cleanupFirebaseData(requestorId, postId).catch(() => {
+          // Ignore cleanup errors
+        })
+      }
+      
       if (error instanceof Error) {
         throw error
       }
@@ -180,16 +297,19 @@ class FirebaseServerService {
 
   /**
    * Get historical data formatted for chart display
+   * Uses cached yearly data for 1M and 3M periods, fetches fresh data for 1Y
    * 
    * @param symbol - The commodity symbol
-   * @param period - Time period filter ('1D' | '1W' | '1M' | '3M' | '6M' | '1Y')
+   * @param period - Time period filter ('1M' | '3M' | '1Y')
    * @param asAtDate - Optional date filter
+   * @param onProgress - Optional callback for polling progress
    * @returns Formatted chart data with labels and price arrays
    */
   async getHistoricalChartData(
     symbol: string,
-    period: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' = '3M',
-    asAtDate?: string
+    period: '1M' | '3M' | '1Y' = '3M',
+    asAtDate?: string,
+    onProgress?: (attempt: number, maxAttempts: number) => void
   ): Promise<{
     labels: string[]
     data: number[]
@@ -199,18 +319,35 @@ class FirebaseServerService {
     close: number[]
     rawData: HistoricalPricePoint[]
   }> {
-    const response = await this.getTickerInfo(symbol, asAtDate)
-    
-    if (!response.closingPrices || response.closingPrices.length === 0) {
-      throw new Error(`No historical data found for symbol: ${symbol}`)
+    let yearlyData: HistoricalPricePoint[] = []
+    let useCache = false
+
+    // For 1M and 3M, try to use cached yearly data first
+    if (period === '1M' || period === '3M') {
+      const cached = this.getCachedYearlyData(symbol)
+      if (cached && cached.data.length > 0) {
+        yearlyData = cached.data
+        useCache = true
+      }
+    }
+
+    // If no cache available or requesting 1Y, fetch fresh yearly data
+    if (!useCache || period === '1Y') {
+      const response = await this.getTickerInfo(symbol, asAtDate, onProgress)
+      
+      if (!response.closingPrices || response.closingPrices.length === 0) {
+        throw new Error(`No historical data found for symbol: ${symbol}`)
+      }
+
+      yearlyData = response.closingPrices
     }
 
     // Filter data based on period
-    let filteredData = this.filterDataByPeriod(response.closingPrices, period)
+    let filteredData = this.filterDataByPeriod(yearlyData, period)
     
     // If no data after filtering, use all available data but limit to reasonable amount
     if (filteredData.length === 0) {
-      filteredData = response.closingPrices.slice(-30) // Take last 30 records
+      filteredData = yearlyData.slice(-30) // Take last 30 records
     }
 
     // Sort by date (oldest first)
@@ -241,26 +378,17 @@ class FirebaseServerService {
    */
   private filterDataByPeriod(
     data: HistoricalPricePoint[],
-    period: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y'
+    period: '1M' | '3M' | '1Y'
   ): HistoricalPricePoint[] {
     const now = new Date()
     const cutoffDate = new Date()
 
     switch (period) {
-      case '1D':
-        cutoffDate.setDate(now.getDate() - 1)
-        break
-      case '1W':
-        cutoffDate.setDate(now.getDate() - 7)
-        break
       case '1M':
         cutoffDate.setMonth(now.getMonth() - 1)
         break
       case '3M':
         cutoffDate.setMonth(now.getMonth() - 3)
-        break
-      case '6M':
-        cutoffDate.setMonth(now.getMonth() - 6)
         break
       case '1Y':
         cutoffDate.setFullYear(now.getFullYear() - 1)
@@ -275,16 +403,33 @@ class FirebaseServerService {
    */
   private formatDateLabel(
     dateString: string,
-    period: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y'
+    period: '1M' | '3M' | '1Y'
   ): string {
     const date = new Date(dateString)
+    return date.toLocaleDateString('en-GH', { month: 'short', day: 'numeric' })
+  }
 
-    if (period === '1D') {
-      return date.toLocaleTimeString('en-GH', { hour: '2-digit', minute: '2-digit' })
-    } else if (period === '1W') {
-      return date.toLocaleDateString('en-GH', { month: 'short', day: 'numeric' })
-    } else {
-      return date.toLocaleDateString('en-GH', { month: 'short', day: 'numeric' })
+  /**
+   * Clear cached yearly data for a symbol
+   */
+  clearCache(symbol: string): void {
+    const cacheKey = `${this.CACHE_KEY_PREFIX}${symbol}`
+    localStorage.removeItem(cacheKey)
+  }
+
+  /**
+   * Clear all cached yearly data
+   */
+  clearAllCache(): void {
+    try {
+      const keys = Object.keys(localStorage)
+      keys.forEach(key => {
+        if (key.startsWith(this.CACHE_KEY_PREFIX)) {
+          localStorage.removeItem(key)
+        }
+      })
+    } catch (error) {
+      console.warn('Failed to clear cache:', error)
     }
   }
 }

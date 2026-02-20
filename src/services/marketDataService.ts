@@ -392,8 +392,9 @@ class MarketDataService {
   /**
    * Get historical market data for charts from Firebase
    * Uses the new Firebase server_requests/server_responses endpoint pattern
+   * Always fetches 1 year of data and caches it, then filters for requested period
    */
-  async getHistoricalData(symbol: string, period: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' = '3M'): Promise<{
+  async getHistoricalData(symbol: string, period: '1M' | '3M' | '1Y' = '3M'): Promise<{
     labels: string[]
     data: number[]
     high: number[]
@@ -402,7 +403,7 @@ class MarketDataService {
     close: number[]
   }> {
     try {
-      // Use the new Firebase server service
+      // Use the new Firebase server service (handles caching and cleanup)
       const chartData = await firebaseServerService.getHistoricalChartData(symbol, period)
       
       return {
@@ -427,7 +428,7 @@ class MarketDataService {
    * Legacy method for getting historical data (fallback)
    * Kept for backward compatibility
    */
-  private async getHistoricalDataLegacy(symbol: string, period: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' = '3M'): Promise<{
+  private async getHistoricalDataLegacy(symbol: string, period: '1M' | '3M' | '1Y' = '3M'): Promise<{
     labels: string[]
     data: number[]
     high: number[]
@@ -516,8 +517,8 @@ class MarketDataService {
       throw new Error(`No historical data found for symbol: ${symbol}`)
     }
 
-    // Filter data based on period
-    let filteredData = this.filterDataByPeriod(historicalData, period)
+    // Filter data based on period (legacy method supports 1M, 3M, 1Y)
+    let filteredData = this.filterDataByPeriodLegacy(historicalData, period)
     
     // If no data after filtering, use all available data but limit to reasonable amount
     if (filteredData.length === 0) {
@@ -559,27 +560,18 @@ class MarketDataService {
   }
 
   /**
-   * Filter historical data by time period
+   * Filter historical data by time period (legacy method)
    */
-  private filterDataByPeriod(data: any[], period: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y'): any[] {
+  private filterDataByPeriodLegacy(data: any[], period: '1M' | '3M' | '1Y'): any[] {
     const now = new Date()
     const cutoffDate = new Date()
     
     switch (period) {
-      case '1D':
-        cutoffDate.setDate(now.getDate() - 1)
-        break
-      case '1W':
-        cutoffDate.setDate(now.getDate() - 7)
-        break
       case '1M':
         cutoffDate.setMonth(now.getMonth() - 1)
         break
       case '3M':
         cutoffDate.setMonth(now.getMonth() - 3)
-        break
-      case '6M':
-        cutoffDate.setMonth(now.getMonth() - 6)
         break
       case '1Y':
         cutoffDate.setFullYear(now.getFullYear() - 1)
@@ -592,16 +584,9 @@ class MarketDataService {
   /**
    * Format date label for chart display
    */
-  private formatDateLabel(dateString: string, period: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y'): string {
+  private formatDateLabel(dateString: string, period: '1M' | '3M' | '1Y'): string {
     const date = new Date(dateString)
-    
-    if (period === '1D') {
-      return date.toLocaleTimeString('en-GH', { hour: '2-digit', minute: '2-digit' })
-    } else if (period === '1W') {
-      return date.toLocaleDateString('en-GH', { month: 'short', day: 'numeric' })
-    } else {
-      return date.toLocaleDateString('en-GH', { month: 'short', day: 'numeric' })
-    }
+    return date.toLocaleDateString('en-GH', { month: 'short', day: 'numeric' })
   }
 
 
