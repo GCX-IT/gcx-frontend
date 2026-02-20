@@ -555,10 +555,15 @@ const gradeVariants = computed(() => {
       variants.set(gradeKey, item)
     }
   })
-  return Array.from(variants.entries()).map(([grade, commodity]) => ({
-    grade,
-    commodity
-  }))
+  // Sort by grade number (1, 2, 3, 4) for consistent display
+  return Array.from(variants.entries())
+    .map(([grade, commodity]) => ({
+      grade,
+      commodity,
+      gradeNum: parseInt(grade) || 0 // Extract numeric grade for sorting
+    }))
+    .sort((a, b) => a.gradeNum - b.gradeNum)
+    .map(({ grade, commodity }) => ({ grade, commodity }))
 })
 
 const selectGradeVariant = (commodity: DisplayCommodity) => {
@@ -567,6 +572,8 @@ const selectGradeVariant = (commodity: DisplayCommodity) => {
     selectedTab.value = typeKey
   }
   selectedCommodity.value = commodity
+  // Reload chart data when grade changes
+  loadChartData()
 }
 
 // Get price change class
@@ -866,10 +873,14 @@ onUnmounted(() => {
                 v-for="variant in gradeVariants"
                 :key="variant.grade"
                 @click="selectGradeVariant(variant.commodity)"
-                class="px-3 py-1 text-xs font-semibold rounded-full border transition-all duration-200"
-                :class="variant.commodity.symbol === selectedCommodity.symbol
-                  ? 'bg-red-600 border-red-600 text-white shadow'
-                  : (isDarkMode ? 'border-slate-600 text-slate-200 hover:bg-slate-700' : 'border-slate-300 text-slate-700 hover:bg-slate-100')"
+                class="px-4 py-2 text-sm font-semibold rounded-lg border-2 transition-all duration-200 min-w-[80px]"
+                :class="(variant.commodity.symbol === selectedCommodity.symbol || variant.grade === selectedCommodity.grade)
+                  ? (isDarkMode 
+                      ? 'bg-red-600 border-red-500 text-white shadow-lg shadow-red-500/50 scale-105' 
+                      : 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-600/30 scale-105')
+                  : (isDarkMode 
+                      ? 'border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-slate-500 hover:text-white hover:scale-105' 
+                      : 'border-slate-300 text-slate-700 hover:bg-slate-100 hover:border-slate-400 hover:text-slate-900 hover:scale-105')"
               >
                 Grade {{ variant.grade }}
               </button>

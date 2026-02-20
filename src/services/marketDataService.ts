@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { firebaseServerService } from './firebaseServerService'
 
 // Firebase endpoint base URL for legacy data (2020-2024)
 const FIREBASE_BASE_URL = 'https://sserp-gcx-webservices-default-rtdb.firebaseio.com/7fc5499a-eccb-4bab-aa52-6ac0269a9dc3/marketdata'
@@ -171,30 +172,6 @@ class MarketDataService {
     }
     
     return 'Commodity'
-  }
-
-  /**
-   * Fetch closing prices from Firebase with caching (legacy)
-   */
-  async getClosingPrices(): Promise<MarketDataResponse> {
-    // Try to get from cache first
-    const cached = this.getFromCache<MarketDataResponse>(this.CACHE_KEY_CLOSING_PRICES)
-    if (cached) {
-      return cached.data
-    }
-
-    try {
-      const response = await this.axiosInstance.get<MarketDataResponse>(
-        `${FIREBASE_BASE_URL}/closing_prices.json`
-      )
-      
-      // Save to cache
-      this.saveToCache(this.CACHE_KEY_CLOSING_PRICES, response.data)
-      
-      return response.data
-    } catch (error) {
-      throw new Error('Failed to fetch market data. Please try again later.')
-    }
   }
 
   /**
@@ -412,144 +389,174 @@ class MarketDataService {
     }
   }
 
-         /**
-          * Get historical market data for charts from Firebase
-          */
-         async getHistoricalData(symbol: string, period: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' = '3M'): Promise<{
-           labels: string[]
-           data: number[]
-           high: number[]
-           low: number[]
-           open: number[]
-           close: number[]
-         }> {
-           try {
-             
-             // Create a new axios instance with longer timeout for historical data
-             const historicalAxios = axios.create({
-               timeout: 30000, // 30 seconds timeout
-               headers: {
-                 'Content-Type': 'application/json',
-               },
-             })
-             
-             // Fetch historical data from Firebase
-             const response = await historicalAxios.get(
-               `${FIREBASE_BASE_URL}.json`
-             )
-             
-             
-             // Find the symbol's historical data by searching through all entries
-             let historicalData = null
-             let foundSymbol = null
-             
-             // First, search through the main structure for entries with closingPrices
-             for (const [key, value] of Object.entries(response.data)) {
-               if (value && typeof value === 'object' && 'closingPrices' in value && 'symbol' in value) {
-                 const item = value as any
-                 
-                 if (item.closingPrices && Array.isArray(item.closingPrices) && item.closingPrices.length > 0) {
-                   if (item.symbol === symbol) {
-                     historicalData = item.closingPrices
-                     foundSymbol = item.symbol
-                     break
-                   }
-                 }
-               }
-             }
-             
-             // If no exact match found, search through nested entries (like harold@gcx,com,gh)
-             if (!historicalData) {
-               
-               for (const [outerKey, outerValue] of Object.entries(response.data)) {
-                 if (outerValue && typeof outerValue === 'object') {
-                   for (const [innerKey, innerValue] of Object.entries(outerValue)) {
-                     if (innerValue && typeof innerValue === 'object' && 'closingPrices' in innerValue && 'symbol' in innerValue) {
-                       const item = innerValue as any
-                       
-                       if (item.closingPrices && Array.isArray(item.closingPrices) && item.closingPrices.length > 0) {
-                         if (item.symbol === symbol) {
-                           historicalData = item.closingPrices
-                           foundSymbol = item.symbol
-                           break
-                         }
-                       }
-                     }
-                   }
-                   if (historicalData) break
-                 }
-               }
-             }
-             
-             // If still no exact match found, use the first available symbol with data
-             if (!historicalData) {
-               
-               for (const [outerKey, outerValue] of Object.entries(response.data)) {
-                 if (outerValue && typeof outerValue === 'object') {
-                   for (const [innerKey, innerValue] of Object.entries(outerValue)) {
-                     if (innerValue && typeof innerValue === 'object' && 'closingPrices' in innerValue && 'symbol' in innerValue) {
-                       const item = innerValue as any
-                       
-                       if (item.closingPrices && Array.isArray(item.closingPrices) && item.closingPrices.length > 0) {
-                         historicalData = item.closingPrices
-                         foundSymbol = item.symbol
-                         break
-                       }
-                     }
-                   }
-                   if (historicalData) break
-                 }
-               }
-             }
-             
-             if (!historicalData || historicalData.length === 0) {
-               throw new Error(`No historical data found for symbol: ${symbol}`)
-             }
+  /**
+   * Get historical market data for charts from Firebase
+   * Uses the new Firebase server_requests/server_responses endpoint pattern
+   */
+  async getHistoricalData(symbol: string, period: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' = '3M'): Promise<{
+    labels: string[]
+    data: number[]
+    high: number[]
+    low: number[]
+    open: number[]
+    close: number[]
+  }> {
+    try {
+      // Use the new Firebase server service
+      const chartData = await firebaseServerService.getHistoricalChartData(symbol, period)
+      
+      return {
+        labels: chartData.labels,
+        data: chartData.data,
+        high: chartData.high,
+        low: chartData.low,
+        open: chartData.open,
+        close: chartData.close,
+      }
+    } catch (error) {
+      // Fallback to legacy method if new service fails
+      try {
+        return await this.getHistoricalDataLegacy(symbol, period)
+      } catch (fallbackError) {
+        throw new Error(`Failed to fetch historical data for ${symbol}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
+    }
+  }
 
-         // Filter data based on period
-         let filteredData = this.filterDataByPeriod(historicalData, period)
-         
-         // If no data after filtering, use all available data but limit to reasonable amount
-         if (filteredData.length === 0) {
-           filteredData = historicalData.slice(-30) // Take last 30 records
-         }
-         
-         // If still no data, create a fallback with current price
-         if (filteredData.length === 0) {
-           const currentPrice = 1000 // Default fallback price
-           const days = 30
-           const fallbackData = []
-           
-           for (let i = days; i >= 0; i--) {
-             const date = new Date()
-             date.setDate(date.getDate() - i)
-             fallbackData.push({
-               sessionDate: date.toISOString().split('T')[0],
-               closing: currentPrice + (Math.random() - 0.5) * 100,
-               high: currentPrice + Math.random() * 50,
-               low: currentPrice - Math.random() * 50,
-               opening: currentPrice + (Math.random() - 0.5) * 20
-             })
-           }
-           filteredData = fallbackData
-         }
-         
-         // Sort by date (oldest first)
-         filteredData.sort((a, b) => new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime())
-             
-             const labels = filteredData.map(item => this.formatDateLabel(item.sessionDate, period))
-             const data = filteredData.map(item => parseFloat(item.closing))
-             const high = filteredData.map(item => parseFloat(item.high))
-             const low = filteredData.map(item => parseFloat(item.low))
-             const open = filteredData.map(item => parseFloat(item.opening))
-             const close = filteredData.map(item => parseFloat(item.closing))
-             
-             // Return actual data as-is from Firebase, no artificial variation
-             return { labels, data, high, low, open, close }
-           } catch (error) {
-             throw error
-           }
-         }
+  /**
+   * Legacy method for getting historical data (fallback)
+   * Kept for backward compatibility
+   */
+  private async getHistoricalDataLegacy(symbol: string, period: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' = '3M'): Promise<{
+    labels: string[]
+    data: number[]
+    high: number[]
+    low: number[]
+    open: number[]
+    close: number[]
+  }> {
+    // Create a new axios instance with longer timeout for historical data
+    const historicalAxios = axios.create({
+      timeout: 30000, // 30 seconds timeout
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    
+    // Fetch historical data from Firebase
+    const response = await historicalAxios.get(
+      `${FIREBASE_BASE_URL}.json`
+    )
+    
+    
+    // Find the symbol's historical data by searching through all entries
+    let historicalData = null
+    let foundSymbol = null
+    
+    // First, search through the main structure for entries with closingPrices
+    for (const [key, value] of Object.entries(response.data)) {
+      if (value && typeof value === 'object' && 'closingPrices' in value && 'symbol' in value) {
+        const item = value as any
+        
+        if (item.closingPrices && Array.isArray(item.closingPrices) && item.closingPrices.length > 0) {
+          if (item.symbol === symbol) {
+            historicalData = item.closingPrices
+            foundSymbol = item.symbol
+            break
+          }
+        }
+      }
+    }
+    
+    // If no exact match found, search through nested entries (like harold@gcx,com,gh)
+    if (!historicalData) {
+      
+      for (const [outerKey, outerValue] of Object.entries(response.data)) {
+        if (outerValue && typeof outerValue === 'object') {
+          for (const [innerKey, innerValue] of Object.entries(outerValue)) {
+            if (innerValue && typeof innerValue === 'object' && 'closingPrices' in innerValue && 'symbol' in innerValue) {
+              const item = innerValue as any
+              
+              if (item.closingPrices && Array.isArray(item.closingPrices) && item.closingPrices.length > 0) {
+                if (item.symbol === symbol) {
+                  historicalData = item.closingPrices
+                  foundSymbol = item.symbol
+                  break
+                }
+              }
+            }
+          }
+          if (historicalData) break
+        }
+      }
+    }
+    
+    // If still no exact match found, use the first available symbol with data
+    if (!historicalData) {
+      
+      for (const [outerKey, outerValue] of Object.entries(response.data)) {
+        if (outerValue && typeof outerValue === 'object') {
+          for (const [innerKey, innerValue] of Object.entries(outerValue)) {
+            if (innerValue && typeof innerValue === 'object' && 'closingPrices' in innerValue && 'symbol' in innerValue) {
+              const item = innerValue as any
+              
+              if (item.closingPrices && Array.isArray(item.closingPrices) && item.closingPrices.length > 0) {
+                historicalData = item.closingPrices
+                foundSymbol = item.symbol
+                break
+              }
+            }
+          }
+          if (historicalData) break
+        }
+      }
+    }
+    
+    if (!historicalData || historicalData.length === 0) {
+      throw new Error(`No historical data found for symbol: ${symbol}`)
+    }
+
+    // Filter data based on period
+    let filteredData = this.filterDataByPeriod(historicalData, period)
+    
+    // If no data after filtering, use all available data but limit to reasonable amount
+    if (filteredData.length === 0) {
+      filteredData = historicalData.slice(-30) // Take last 30 records
+    }
+    
+    // If still no data, create a fallback with current price
+    if (filteredData.length === 0) {
+      const currentPrice = 1000 // Default fallback price
+      const days = 30
+      const fallbackData = []
+      
+      for (let i = days; i >= 0; i--) {
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        fallbackData.push({
+          sessionDate: date.toISOString().split('T')[0],
+          closing: currentPrice + (Math.random() - 0.5) * 100,
+          high: currentPrice + Math.random() * 50,
+          low: currentPrice - Math.random() * 50,
+          opening: currentPrice + (Math.random() - 0.5) * 20
+        })
+      }
+      filteredData = fallbackData
+    }
+    
+    // Sort by date (oldest first)
+    filteredData.sort((a, b) => new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime())
+        
+    const labels = filteredData.map(item => this.formatDateLabel(item.sessionDate, period))
+    const data = filteredData.map(item => parseFloat(item.closing))
+    const high = filteredData.map(item => parseFloat(item.high))
+    const low = filteredData.map(item => parseFloat(item.low))
+    const open = filteredData.map(item => parseFloat(item.opening))
+    const close = filteredData.map(item => parseFloat(item.closing))
+    
+    // Return actual data as-is from Firebase, no artificial variation
+    return { labels, data, high, low, open, close }
+  }
 
   /**
    * Filter historical data by time period
