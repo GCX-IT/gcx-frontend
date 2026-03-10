@@ -72,7 +72,7 @@ const navigationItems = computed<NavigationItem[]>(() => [
       },
       {
         id: 'trader-manager',
-        label: 'Members',
+        label: 'Traders',
         icon: 'pi pi-user-plus',
         permissions: ['admin', 'editor']
       },

@@ -16,7 +16,7 @@ const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()
   if (!q) return brokers.value
   return brokers.value.filter(broker =>
-    [broker.name, broker.company || '', broker.specialization || '', broker.email || ''].some(f => f.toLowerCase().includes(q))
+    [broker.name, broker.company || '', broker.email || ''].some(f => f.toLowerCase().includes(q))
   )
 })
 
@@ -59,7 +59,7 @@ watch(query, (newQuery) => {
 
     <div class="mb-4 flex items-center justify-between gap-4 flex-wrap">
       <div class="text-sm font-semibold" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Search:</div>
-      <input type="text" v-model="query" placeholder="Search name, company, specialization..."
+      <input type="text" v-model="query" placeholder="Search name, company..."
              class="w-full md:w-80 px-3 py-2 rounded border outline-none focus:ring"
              :class="isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-100 focus:ring-yellow-700' : 'bg-white border-slate-300 text-slate-900 focus:ring-yellow-300'" />
     </div>
@@ -94,8 +94,6 @@ watch(query, (newQuery) => {
           <tr :class="isDarkMode ? 'bg-slate-800 text-slate-200' : 'bg-slate-50 text-slate-700'">
             <th class="px-4 py-3 font-semibold">Name</th>
             <th class="px-4 py-3 font-semibold">Company</th>
-            <th class="px-4 py-3 font-semibold">Specialization</th>
-            <th class="px-4 py-3 font-semibold">Experience</th>
             <th class="px-4 py-3 font-semibold">Contact</th>
           </tr>
         </thead>
@@ -103,15 +101,13 @@ watch(query, (newQuery) => {
           <tr v-for="broker in paged" :key="broker.id" :class="isDarkMode ? 'hover:bg-slate-800/60' : 'hover:bg-slate-50'">
             <td class="px-4 py-3" :class="isDarkMode ? 'text-slate-100' : 'text-slate-800'">{{ broker.name }}</td>
             <td class="px-4 py-3" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">{{ broker.company || '-' }}</td>
-            <td class="px-4 py-3" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">{{ broker.specialization || '-' }}</td>
-            <td class="px-4 py-3" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">{{ broker.experience_years }} years</td>
             <td class="px-4 py-3" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
               <div v-if="broker.email" class="text-sm">{{ broker.email }}</div>
               <div v-if="broker.phone_no" class="text-sm">{{ broker.phone_no }}</div>
             </td>
           </tr>
           <tr v-if="paged.length === 0">
-            <td colspan="5" class="px-4 py-6 text-center" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">No results found</td>
+            <td colspan="3" class="px-4 py-6 text-center" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">No results found</td>
           </tr>
         </tbody>
       </table>

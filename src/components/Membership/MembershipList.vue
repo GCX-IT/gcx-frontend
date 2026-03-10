@@ -17,7 +17,7 @@ const allMembers = computed(() =>
   traders.value.map(trader => ({
     name: trader.name,
     industry: trader.industry || '',
-    memberType: trader.member_type,
+    memberType: trader.member_type === 'Full Member' ? 'Trader' : trader.member_type,
     phone: trader.phone_no || ''
   }))
 )

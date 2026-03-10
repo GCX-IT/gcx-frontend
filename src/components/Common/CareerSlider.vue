@@ -51,12 +51,12 @@
         <div class="flex-1 overflow-y-auto max-h-[calc(100vh-120px)] scrollbar-hide">
           <div class="p-6">
             <!-- Career Image -->
-            <div v-if="career?.image_path" class="mb-8">
-              <div class="w-full h-64 rounded-2xl overflow-hidden shadow-lg">
+            <div v-if="career?.image_path" class="mb-8 flex justify-center">
+              <div class="w-full md:w-3/4 lg:w-2/3 rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700">
                 <img 
                   :src="career.image_path" 
                   :alt="career.title"
-                  class="w-full h-full object-cover"
+                  class="w-full h-auto object-contain block mx-auto"
                 />
               </div>
             </div>
