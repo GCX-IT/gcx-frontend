@@ -758,10 +758,20 @@ const saveVideo = async () => {
 
   saving.value = true
   try {
-    if (isEditingVideo.value && currentVideo.value.id) {
-      await videoService.updateLibraryVideo(currentVideo.value.id, currentVideo.value)
+    // Clone data for formatting
+    const formattedData = { ...currentVideo.value }
+
+    // Format date to ISO string for Go backend
+    if (formattedData.date) {
+      formattedData.date = new Date(formattedData.date).toISOString()
     } else {
-      await videoService.addVideoToLibrary(selectedLibrary.value.id, currentVideo.value)
+      formattedData.date = null
+    }
+
+    if (isEditingVideo.value && formattedData.id) {
+      await videoService.updateLibraryVideo(formattedData.id, formattedData)
+    } else {
+      await videoService.addVideoToLibrary(selectedLibrary.value.id, formattedData)
     }
     showVideoModal.value = false
     // Reload videos

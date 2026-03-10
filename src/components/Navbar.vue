@@ -39,7 +39,7 @@ const navigation = computed(() => [
         items: [
           { name: 'Trading Services', href: '/services#trading', description: 'Commodity trading and market access' },
           { name: 'Market Data', href: '/services#market-data', description: 'Real-time market information and analytics' },
-          { name: 'GCX Certification Program in Commodity Trading', href: 'https://apps.gcx.com.gh/onlineforms/', description: 'Certificate Programme in Commodity Trading (CPCT)', external: true }
+          { name: 'GCX Certification Program in Commodity Trading', href: '#', description: 'Certificate Programme in Commodity Trading (CPCT)', external: true, inactive: true }
         ]
       },
       { 
@@ -415,16 +415,19 @@ const isWideDropdown = (name: string) => name === 'About'
                         </h4>
                         <div class="space-y-1">
                           <component
-                            :is="(dropdownItem as any).external ? 'a' : 'router-link'"
+                            :is="(dropdownItem as any).inactive ? 'span' : ((dropdownItem as any).external ? 'a' : 'router-link')"
                             v-for="dropdownItem in section.items"
                             :key="dropdownItem.name"
-                            :to="(dropdownItem as any).external ? undefined : dropdownItem.href"
-                            :href="(dropdownItem as any).external ? dropdownItem.href : undefined"
-                            :target="(dropdownItem as any).external ? '_blank' : undefined"
-                            :rel="(dropdownItem as any).external ? 'noopener noreferrer' : undefined"
-                            @click="closeDropdown"
+                            :to="(dropdownItem as any).inactive ? undefined : ((dropdownItem as any).external ? undefined : dropdownItem.href)"
+                            :href="(dropdownItem as any).inactive ? undefined : ((dropdownItem as any).external ? dropdownItem.href : undefined)"
+                            :target="(dropdownItem as any).inactive ? undefined : ((dropdownItem as any).external ? '_blank' : undefined)"
+                            :rel="(dropdownItem as any).inactive ? undefined : ((dropdownItem as any).external ? 'noopener noreferrer' : undefined)"
+                            @click="(dropdownItem as any).inactive ? undefined : closeDropdown"
                             class="group block p-2 rounded-lg transition-all duration-200"
-                            :class="isDarkMode ? 'hover:bg-slate-800' : 'hover:bg-gray-50'"
+                            :class="[
+                              isDarkMode ? 'hover:bg-slate-800' : 'hover:bg-gray-50',
+                              (dropdownItem as any).inactive ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                            ]"
                           >
                             <div class="flex items-start justify-between">
                               <div class="flex-1">
@@ -457,16 +460,19 @@ const isWideDropdown = (name: string) => name === 'About'
                         </h4>
                         <div class="space-y-1">
                           <component
-                            :is="(dropdownItem as any).external ? 'a' : 'router-link'"
+                            :is="(dropdownItem as any).inactive ? 'span' : ((dropdownItem as any).external ? 'a' : 'router-link')"
                             v-for="dropdownItem in section.items"
                             :key="dropdownItem.name"
-                            :to="(dropdownItem as any).external ? undefined : dropdownItem.href"
-                            :href="(dropdownItem as any).external ? dropdownItem.href : undefined"
-                            :target="(dropdownItem as any).external ? '_blank' : undefined"
-                            :rel="(dropdownItem as any).external ? 'noopener noreferrer' : undefined"
-                            @click="closeDropdown"
+                            :to="(dropdownItem as any).inactive ? undefined : ((dropdownItem as any).external ? undefined : dropdownItem.href)"
+                            :href="(dropdownItem as any).inactive ? undefined : ((dropdownItem as any).external ? dropdownItem.href : undefined)"
+                            :target="(dropdownItem as any).inactive ? undefined : ((dropdownItem as any).external ? '_blank' : undefined)"
+                            :rel="(dropdownItem as any).inactive ? undefined : ((dropdownItem as any).external ? 'noopener noreferrer' : undefined)"
+                            @click="(dropdownItem as any).inactive ? undefined : closeDropdown"
                             class="group block p-2 rounded-lg transition-all duration-200"
-                            :class="isDarkMode ? 'hover:bg-slate-800' : 'hover:bg-gray-50'"
+                            :class="[
+                              isDarkMode ? 'hover:bg-slate-800' : 'hover:bg-gray-50',
+                              (dropdownItem as any).inactive ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                            ]"
                           >
                             <div class="flex items-start justify-between">
                               <div class="flex-1">
@@ -748,17 +754,20 @@ const isWideDropdown = (name: string) => name === 'About'
                   <h4 class="text-xs font-semibold uppercase tracking-wide mb-2 px-2" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
                     {{ section.title }}
                   </h4>
-                      <component
-                        :is="(dropdownItem as any).external ? 'a' : 'router-link'"
+                  <component
+                    :is="(dropdownItem as any).inactive ? 'span' : ((dropdownItem as any).external ? 'a' : 'router-link')"
                     v-for="dropdownItem in section.items"
                     :key="dropdownItem.name"
-                        :to="(dropdownItem as any).external ? undefined : dropdownItem.href"
-                        :href="(dropdownItem as any).external ? dropdownItem.href : undefined"
-                        :target="(dropdownItem as any).external ? '_blank' : undefined"
-                        :rel="(dropdownItem as any).external ? 'noopener noreferrer' : undefined"
-                    @click="closeMenu"
+                    :to="(dropdownItem as any).inactive ? undefined : ((dropdownItem as any).external ? undefined : dropdownItem.href)"
+                    :href="(dropdownItem as any).inactive ? undefined : ((dropdownItem as any).external ? dropdownItem.href : undefined)"
+                    :target="(dropdownItem as any).inactive ? undefined : ((dropdownItem as any).external ? '_blank' : undefined)"
+                    :rel="(dropdownItem as any).inactive ? undefined : ((dropdownItem as any).external ? 'noopener noreferrer' : undefined)"
+                    @click="(dropdownItem as any).inactive ? undefined : closeMenu"
                     class="block px-3 py-2 text-sm transition-colors rounded-lg truncate"
-                    :class="isDarkMode ? 'text-slate-300 hover:bg-slate-700 hover:text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                    :class="[
+                      isDarkMode ? 'text-slate-300 hover:bg-slate-700 hover:text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
+                      (dropdownItem as any).inactive ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                    ]"
                   >
                     {{ dropdownItem.name }}
                   </component>

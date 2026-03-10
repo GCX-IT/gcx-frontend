@@ -9,10 +9,10 @@
           </div>
       <div>
             <h1 class="text-3xl lg:text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent transition-colors duration-300" :class="isDarkMode ? 'from-white to-slate-200' : 'from-slate-900 to-slate-700'">
-              Trader Management
+              Members Management
             </h1>
             <p class="text-lg mt-1 transition-colors duration-300" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">
-              Manage membership list and trader information
+              Manage membership list and member information
             </p>
           </div>
         </div>
@@ -30,13 +30,13 @@
           Export
         </button>
         
-      <button
-        @click="openAddModal"
+        <button
+          @click="openAddModal"
           class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-xl transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl flex items-center gap-2"
-      >
+        >
           <i class="pi pi-plus text-lg"></i>
-        Add Trader
-      </button>
+          Add Member
+        </button>
       </div>
     </div>
 
@@ -47,15 +47,15 @@
           <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <i class="pi pi-search text-slate-400 dark:text-slate-400"></i>
           </div>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search traders by name, phone, or email..."
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search members by name, phone, or email..."
             class="w-full pl-12 pr-4 py-3 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
             :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white/90 border-blue-300 text-slate-800 placeholder-slate-500 shadow-sm'"
-          @input="debouncedSearch"
-        />
-      </div>
+            @input="debouncedSearch"
+          />
+        </div>
         
         <div class="flex gap-3">
       <select
@@ -86,7 +86,7 @@
         <div class="p-4 border shadow-sm transition-colors duration-300" :class="isDarkMode ? 'bg-slate-700 border-slate-600' : 'bg-gradient-to-br from-white to-blue-50/50 border-blue-200 shadow-blue-100'">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium transition-colors duration-300" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">Total Traders</p>
+              <p class="text-sm font-medium transition-colors duration-300" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">Total Members</p>
               <p class="text-2xl font-bold transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-slate-900'">{{ traders.length }}</p>
             </div>
             <i class="pi pi-users text-2xl text-blue-500 dark:text-blue-400"></i>
@@ -618,10 +618,17 @@ const closeModal = () => {
 const saveTrader = async () => {
   saving.value = true
   try {
-    if (editingTrader.value) {
-      await updateTrader(editingTrader.value.id, form.value)
+    const formattedForm = { ...form.value }
+    if (formattedForm.registration_date) {
+      formattedForm.registration_date = new Date(formattedForm.registration_date).toISOString()
     } else {
-      await createTrader(form.value)
+      formattedForm.registration_date = null
+    }
+
+    if (editingTrader.value) {
+      await updateTrader(editingTrader.value.id, formattedForm)
+    } else {
+      await createTrader(formattedForm)
     }
     closeModal()
     loadTraders()

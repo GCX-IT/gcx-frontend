@@ -817,18 +817,29 @@ const saveEvent = async () => {
       return
     }
 
-    // Ensure category matches type
-    formData.value.category = formData.value.type
-    
-    // Convert arrays to JSON for saving
-    formData.value.speakers = speakers.value as any
-    formData.value.agenda = agenda.value as any
-    formData.value.requirements = requirements.value as any
+    // Clone data for formatting
+    const formattedData = { ...formData.value }
 
-    if (isEditing.value && formData.value.id) {
-      await eventService.updateEvent(token, formData.value.id, formData.value)
+    // Ensure category matches type
+    formattedData.category = formattedData.type
+    
+    // Format dates to ISO strings for Go backend
+    if (formattedData.date) {
+      formattedData.date = new Date(formattedData.date).toISOString()
+    }
+    if (formattedData.registration_deadline) {
+      formattedData.registration_deadline = new Date(formattedData.registration_deadline).toISOString()
+    }
+
+    // Convert arrays to JSON for saving
+    formattedData.speakers = speakers.value as any
+    formattedData.agenda = agenda.value as any
+    formattedData.requirements = requirements.value as any
+
+    if (isEditing.value && formattedData.id) {
+      await eventService.updateEvent(token, formattedData.id, formattedData)
     } else {
-      await eventService.createEvent(token, formData.value)
+      await eventService.createEvent(token, formattedData)
     }
 
     showModal.value = false

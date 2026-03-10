@@ -206,7 +206,7 @@
                         class="text-sm transition-colors duration-200"
                         :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'"
                       >
-                        Send your application to {{ career?.contact_email || 'careers@gcx.com' }}
+                        Send your application to {{ career?.contact_email || 'hr@gcx.com.gh' }}
                       </p>
                     </div>
                   </div>
@@ -271,13 +271,10 @@ const close = () => {
 }
 
 const applyForJob = () => {
-  if (props.career?.contact_email) {
-    const subject = encodeURIComponent(`Application for ${props.career.title}`)
-    const body = encodeURIComponent(`Dear Hiring Manager,\n\nI am writing to express my interest in the ${props.career.title} position at GCX.\n\nPlease find my resume and cover letter attached.\n\nBest regards,`)
-    window.open(`mailto:${props.career.contact_email}?subject=${subject}&body=${body}`)
-  } else {
-    window.open('mailto:careers@gcx.com?subject=Job Application')
-  }
+    const email = props.career?.contact_email || 'hr@gcx.com.gh'
+    const subject = encodeURIComponent(`Application for ${props.career?.title || 'Position'}`)
+    const body = encodeURIComponent(`Dear Hiring Manager,\n\nI am writing to express my interest in the ${props.career?.title || 'position'} at GCX.\n\nPlease find my resume and cover letter attached.\n\nBest regards,`)
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`
 }
 
 const getDepartmentBadgeClass = (department: string) => {

@@ -598,7 +598,7 @@ const formData = ref({
   application_deadline: '',
   start_date: '',
   status: 'Open',
-  contact_email: '',
+  contact_email: 'hr@gcx.com.gh',
   image_path: '',
   file_path: '',
   file_name: ''
@@ -638,7 +638,7 @@ const openAddModal = () => {
     application_deadline: '',
     start_date: '',
     status: 'Open',
-    contact_email: '',
+    contact_email: 'hr@gcx.com.gh',
     image_path: '',
     file_path: '',
     file_name: ''

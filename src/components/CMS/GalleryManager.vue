@@ -600,10 +600,20 @@ const saveGallery = async () => {
 
   saving.value = true
   try {
-    if (isEditingGallery.value && currentGallery.value.id) {
-      await galleryService.updateGallery(currentGallery.value.id, currentGallery.value)
+    // Clone data for formatting
+    const formattedData = { ...currentGallery.value }
+
+    // Format date to ISO string for Go backend
+    if (formattedData.date) {
+      formattedData.date = new Date(formattedData.date).toISOString()
     } else {
-      await galleryService.createGallery(currentGallery.value)
+      formattedData.date = null
+    }
+
+    if (isEditingGallery.value && formattedData.id) {
+      await galleryService.updateGallery(formattedData.id, formattedData)
+    } else {
+      await galleryService.createGallery(formattedData)
     }
     showGalleryModal.value = false
     await fetchGalleries()
