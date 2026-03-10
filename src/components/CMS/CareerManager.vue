@@ -691,15 +691,29 @@ const saveCareer = async () => {
   try {
     console.log('📤 Saving career data:', formData.value);
     
+    // Format dates to ISO 8601 strings expected by the Go backend (RFC3339)
+    const formattedData = { ...formData.value };
+    if (formattedData.application_deadline) {
+      formattedData.application_deadline = new Date(formattedData.application_deadline).toISOString();
+    } else {
+      (formattedData as any).application_deadline = null;
+    }
+    
+    if (formattedData.start_date) {
+      formattedData.start_date = new Date(formattedData.start_date).toISOString();
+    } else {
+      (formattedData as any).start_date = null;
+    }
+
     if (editingCareer.value) {
       console.log('🔄 Updating career ID:', editingCareer.value.id);
       // Remove id from update data to avoid conflicts
-      const { id, ...updateData } = formData.value as any;
+      const { id, ...updateData } = formattedData as any;
       console.log('📤 Update data (without id):', updateData);
       await updateCareer(editingCareer.value.id, updateData);
     } else {
       console.log('➕ Creating new career');
-      await createCareer(formData.value as any);
+      await createCareer(formattedData as any);
     }
     closeModal();
   } catch (error) {
