@@ -359,10 +359,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-orange-700'">
-                  Employment Type
+                  Employment Type *
                 </label>
                 <select
                   v-model="formData.employment_type"
+                  required
                   class="w-full px-3 py-2 border rounded-lg transition-colors duration-300" :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-orange-300 text-slate-800'"
                 >
                   <option value="">Select Type</option>
@@ -375,10 +376,11 @@
               
               <div>
                 <label class="block text-sm font-medium mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-orange-700'">
-                  Experience Level
+                  Experience Level *
                 </label>
                 <select
                   v-model="formData.experience_level"
+                  required
                   class="w-full px-3 py-2 border rounded-lg transition-colors duration-300" :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-orange-300 text-slate-800'"
                 >
                   <option value="">Select Level</option>
