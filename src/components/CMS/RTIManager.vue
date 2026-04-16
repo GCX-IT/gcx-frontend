@@ -1,96 +1,141 @@
 <template>
-  <div class="rti-manager min-h-screen transition-colors duration-300" :class="isDarkMode ? 'bg-slate-900' : 'bg-purple-50'">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6 p-6 transition-colors duration-300" :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-purple-200'">
-      <div>
-        <h2 class="text-2xl font-bold transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-purple-600'">RTI Management</h2>
-        <p class="transition-colors duration-300" :class="isDarkMode ? 'text-slate-400' : 'text-purple-700'">Manage RTI requests and downloadable resources</p>
-      </div>
-      <div class="flex gap-2">
-        <button
-          v-if="activeTab === 'documents'"
-          @click="openAddDocumentModal"
-          class="px-4 py-2 rounded-lg flex items-center gap-2"
-          :class="isDarkMode ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-green-500 hover:bg-green-600 text-white'"
-        >
-          <i class="pi pi-plus"></i>
-          Add Document
-        </button>
-        <button
-          @click="activeTab === 'requests' ? fetchRequests() : fetchDocuments()"
-          class="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-300"
-          :class="isDarkMode ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white'"
-        >
-          <i class="pi pi-refresh"></i>
-          Refresh
-        </button>
+  <div class="rti-manager min-h-screen transition-all duration-500 animate-in fade-in" :class="isDarkMode ? 'bg-slate-900' : 'bg-slate-50'">
+    <!-- Header with Modern Design -->
+    <div class="mb-8 p-8 rounded-3xl border transition-all duration-500 shadow-xl" 
+         :class="isDarkMode ? 'bg-slate-800/50 border-slate-700 shadow-slate-950/20' : 'bg-white border-slate-200 shadow-slate-200/50'">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+          <div class="flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.2em] text-green-500 mb-2">
+            <i class="pi pi-file-check"></i>
+            <span>Compliance & Transparency</span>
+          </div>
+          <h2 class="text-4xl font-black tracking-tight" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
+            RTI Management
+          </h2>
+          <p class="mt-2 text-sm font-medium" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
+            Process Right to Information requests and manage public transparency resources.
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            v-if="activeTab === 'documents'"
+            @click="openAddDocumentModal"
+            class="px-6 py-3 bg-green-600 hover:bg-green-500 text-white text-xs font-black uppercase tracking-widest rounded-2xl flex items-center gap-3 transition-all duration-300 shadow-lg shadow-green-600/20 active:scale-95"
+          >
+            <i class="pi pi-plus-circle"></i>
+            <span>Add Document</span>
+          </button>
+          <button
+            @click="activeTab === 'requests' ? fetchRequests() : fetchDocuments()"
+            class="p-3 rounded-2xl transition-all duration-300 active:scale-95 shadow-md"
+            :class="isDarkMode ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+          >
+            <i class="pi pi-refresh"></i>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="flex gap-2 mb-6 px-6">
+    <!-- Modern Tabs Navigation -->
+    <div class="flex p-1.5 rounded-2xl mb-8 w-fit mx-auto md:mx-0" 
+         :class="isDarkMode ? 'bg-slate-800/50 border border-slate-700' : 'bg-white border border-slate-200 shadow-sm'">
       <button
         @click="activeTab = 'requests'"
-        class="px-6 py-3 rounded-lg font-medium transition-all"
-        :class="activeTab === 'requests' ? 'bg-purple-600 text-white' : (isDarkMode ? 'bg-slate-700 text-slate-300' : 'bg-white text-slate-700')"
+        class="px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-3"
+        :class="activeTab === 'requests' 
+          ? 'bg-green-600 text-white shadow-lg shadow-green-600/20' 
+          : 'text-gray-500 hover:text-green-500'"
       >
-        <i class="pi pi-inbox mr-2"></i>
-        Requests
+        <i class="pi pi-inbox"></i>
+        <span>Requests</span>
       </button>
       <button
         @click="activeTab = 'documents'"
-        class="px-6 py-3 rounded-lg font-medium transition-all"
-        :class="activeTab === 'documents' ? 'bg-purple-600 text-white' : (isDarkMode ? 'bg-slate-700 text-slate-300' : 'bg-white text-slate-700')"
+        class="px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-3"
+        :class="activeTab === 'documents' 
+          ? 'bg-green-600 text-white shadow-lg shadow-green-600/20' 
+          : 'text-gray-500 hover:text-green-500'"
       >
-        <i class="pi pi-file-pdf mr-2"></i>
-        Documents & Resources
+        <i class="pi pi-file-pdf"></i>
+        <span>Documents</span>
       </button>
     </div>
 
-    <!-- Stats Cards (Requests Tab Only) -->
-    <div v-if="activeTab === 'requests'" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 px-6">
-      <div class="p-4 rounded-lg border transition-colors duration-300" :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-purple-200'">
-        <div class="text-2xl font-bold" :class="isDarkMode ? 'text-white' : 'text-slate-900'">{{ stats.total_requests || 0 }}</div>
-        <div class="text-sm" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">Total Requests</div>
+    <!-- Stats Dashboard (Requests Tab) -->
+    <div v-if="activeTab === 'requests'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="p-6 rounded-3xl border transition-all duration-300 shadow-sm" 
+           :class="isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'">
+        <p class="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Total Inbound</p>
+        <div class="flex items-center justify-between">
+          <h3 class="text-3xl font-black tracking-tighter" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
+            {{ stats.total_requests || 0 }}
+          </h3>
+          <div class="w-10 h-10 rounded-xl bg-slate-500/10 flex items-center justify-center">
+            <i class="pi pi-list text-slate-500"></i>
+          </div>
+        </div>
       </div>
-      <div class="p-4 rounded-lg border transition-colors duration-300" :class="isDarkMode ? 'bg-yellow-900/20 border-yellow-700' : 'bg-yellow-50 border-yellow-200'">
-        <div class="text-2xl font-bold text-yellow-600">{{ stats.pending_requests || 0 }}</div>
-        <div class="text-sm text-yellow-700">Pending</div>
+      <div class="p-6 rounded-3xl border transition-all duration-300 shadow-sm" 
+           :class="isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'">
+        <p class="text-[10px] font-black uppercase tracking-widest text-yellow-500 mb-2">Pending Action</p>
+        <div class="flex items-center justify-between">
+          <h3 class="text-3xl font-black tracking-tighter text-yellow-500">
+            {{ stats.pending_requests || 0 }}
+          </h3>
+          <div class="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
+            <i class="pi pi-clock text-yellow-500"></i>
+          </div>
+        </div>
       </div>
-      <div class="p-4 rounded-lg border transition-colors duration-300" :class="isDarkMode ? 'bg-blue-900/20 border-blue-700' : 'bg-blue-50 border-blue-200'">
-        <div class="text-2xl font-bold text-blue-600">{{ stats.under_review_requests || 0 }}</div>
-        <div class="text-sm text-blue-700">Under Review</div>
+      <div class="p-6 rounded-3xl border transition-all duration-300 shadow-sm" 
+           :class="isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'">
+        <p class="text-[10px] font-black uppercase tracking-widest text-blue-500 mb-2">Under Review</p>
+        <div class="flex items-center justify-between">
+          <h3 class="text-3xl font-black tracking-tighter text-blue-500">
+            {{ stats.under_review_requests || 0 }}
+          </h3>
+          <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+            <i class="pi pi-search text-blue-500"></i>
+          </div>
+        </div>
       </div>
-      <div class="p-4 rounded-lg border transition-colors duration-300" :class="isDarkMode ? 'bg-green-900/20 border-green-700' : 'bg-green-50 border-green-200'">
-        <div class="text-2xl font-bold text-green-600">{{ stats.completed_requests || 0 }}</div>
-        <div class="text-sm text-green-700">Completed</div>
+      <div class="p-6 rounded-3xl border transition-all duration-300 shadow-sm" 
+           :class="isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'">
+        <p class="text-[10px] font-black uppercase tracking-widest text-green-500 mb-2">Resolution Rate</p>
+        <div class="flex items-center justify-between">
+          <h3 class="text-3xl font-black tracking-tighter text-green-500">
+            {{ stats.completed_requests || 0 }}
+          </h3>
+          <div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+            <i class="pi pi-check-circle text-green-500"></i>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- REQUESTS TAB -->
-    <div v-if="activeTab === 'requests'">
-    
-    <!-- Filters -->
-    <div class="p-4 mb-6 transition-colors duration-300 mx-6" :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-purple-200'">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Search</label>
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search by name, email, request ID..."
-            class="w-full px-3 py-2 border rounded-lg"
-            :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-purple-300 text-slate-800 placeholder-slate-500'"
-            @input="debouncedSearch"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Status</label>
+    <!-- Main Content Area -->
+    <div class="space-y-6">
+      <!-- Search & Filters Bar -->
+      <div v-if="activeTab === 'requests'" 
+           class="p-6 rounded-3xl border transition-all duration-500" 
+           :class="isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="relative">
+            <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search ID, Name, Email..."
+              class="w-full pl-11 pr-4 py-3 rounded-2xl border text-sm font-medium transition-all duration-300 focus:ring-2 focus:ring-green-500/20 outline-none"
+              :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'"
+              @input="debouncedSearch"
+            />
+          </div>
           <select
             v-model="statusFilter"
             @change="fetchRequests"
-            class="w-full px-3 py-2 border rounded-lg"
-            :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-purple-300 text-slate-800'"
+            class="w-full px-4 py-3 rounded-2xl border text-sm font-bold uppercase tracking-widest transition-all duration-300 focus:ring-2 focus:ring-green-500/20 outline-none cursor-pointer"
+            :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'"
           >
             <option value="">All Status</option>
             <option value="pending">Pending</option>
@@ -99,14 +144,11 @@
             <option value="rejected">Rejected</option>
             <option value="completed">Completed</option>
           </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Priority</label>
           <select
             v-model="priorityFilter"
             @change="fetchRequests"
-            class="w-full px-3 py-2 border rounded-lg"
-            :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-purple-300 text-slate-800'"
+            class="w-full px-4 py-3 rounded-2xl border text-sm font-bold uppercase tracking-widest transition-all duration-300 focus:ring-2 focus:ring-green-500/20 outline-none cursor-pointer"
+            :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'"
           >
             <option value="">All Priorities</option>
             <option value="low">Low</option>
@@ -114,192 +156,181 @@
             <option value="high">High</option>
             <option value="urgent">Urgent</option>
           </select>
-        </div>
-        <div class="flex items-end">
           <button
             @click="clearFilters"
-            class="w-full px-4 py-2 border rounded-lg"
-            :class="isDarkMode ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-purple-300 text-purple-700 hover:bg-purple-50'"
+            class="w-full px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest border transition-all duration-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+            :class="isDarkMode ? 'border-slate-700 text-slate-400' : 'border-slate-200 text-slate-500'"
           >
-            Clear Filters
+            Reset Filters
           </button>
         </div>
       </div>
-    </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="text-center py-8">
-      <i class="pi pi-spin pi-spinner text-2xl text-purple-600"></i>
-      <p class="mt-2" :class="isDarkMode ? 'text-slate-400' : 'text-purple-600'">Loading RTI requests...</p>
-    </div>
-
-    <!-- Error State -->
-    <div v-else-if="error" class="p-4 mb-6 mx-6" :class="isDarkMode ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'">
-      <div class="flex items-center">
-        <i class="pi pi-exclamation-triangle text-red-600 mr-2"></i>
-        <p :class="isDarkMode ? 'text-red-200' : 'text-red-800'">{{ error }}</p>
-      </div>
-    </div>
-
-    <!-- Requests Table -->
-    <div v-else class="overflow-hidden transition-colors duration-300 mx-6" :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-purple-200'">
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y" :class="isDarkMode ? 'divide-slate-700' : 'divide-purple-200'">
-          <thead :class="isDarkMode ? 'bg-slate-700' : 'bg-purple-100'">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Request ID</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Requester</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Subject</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Type</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Status</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Priority</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Date</th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y" :class="isDarkMode ? 'bg-slate-800 divide-slate-700' : 'bg-white divide-purple-200'">
-            <tr v-for="request in requests" :key="request.id" :class="isDarkMode ? 'hover:bg-slate-700/50' : 'hover:bg-purple-50/50'">
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-purple-600">{{ request.request_id }}</div>
-              </td>
-              <td class="px-6 py-4">
-                <div class="text-sm font-medium" :class="isDarkMode ? 'text-white' : 'text-slate-900'">{{ request.full_name }}</div>
-                <div class="text-xs" :class="isDarkMode ? 'text-slate-500' : 'text-slate-500'">{{ request.email }}</div>
-                <div class="text-xs" :class="isDarkMode ? 'text-slate-500' : 'text-slate-500'">{{ request.phone }}</div>
-                <div v-if="request.id_number" class="text-xs" :class="isDarkMode ? 'text-slate-500' : 'text-slate-500'">ID: {{ request.id_number }}</div>
-              </td>
-              <td class="px-6 py-4">
-                <div class="text-sm" :class="isDarkMode ? 'text-slate-300' : 'text-slate-900'">{{ request.subject }}</div>
-                <div class="text-xs" :class="isDarkMode ? 'text-slate-500' : 'text-slate-500'">{{ request.organization || '-' }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="text-xs" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">{{ request.request_type }}</span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 py-1 text-xs font-semibold rounded-full capitalize" :class="getStatusColor(request.status)">
-                  {{ request.status.replace('_', ' ') }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 py-1 text-xs font-semibold rounded-full capitalize" :class="getPriorityColor(request.priority)">
-                  {{ request.priority }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm" :class="isDarkMode ? 'text-slate-300' : 'text-slate-900'">{{ formatDate(request.created_at) }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <div class="flex gap-2">
-                  <button @click="viewRequest(request)" class="text-blue-600 hover:text-blue-900" title="View Details">
-                    <i class="pi pi-eye"></i>
-                  </button>
-                  <button @click="respondToRequest(request)" class="text-green-600 hover:text-green-900" title="Respond">
-                    <i class="pi pi-reply"></i>
-                  </button>
-                  <button @click="deleteRequest(request)" class="text-red-600 hover:text-red-900" title="Delete">
-                    <i class="pi pi-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div v-if="pagination.totalPages > 1" class="flex justify-between items-center p-4 border-t" :class="isDarkMode ? 'border-slate-700' : 'border-purple-200'">
-        <div class="text-sm" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">
-          Showing {{ (pagination.page - 1) * pagination.limit + 1 }} to {{ Math.min(pagination.page * pagination.limit, pagination.total) }} of {{ pagination.total }} requests
+      <!-- Table/List View -->
+      <div class="rounded-3xl border overflow-hidden transition-all duration-500" 
+           :class="isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'">
+        
+        <!-- Loading Spinner -->
+        <div v-if="loading || loadingDocuments" class="flex flex-col items-center justify-center py-24 space-y-4">
+          <div class="w-12 h-12 rounded-full border-4 border-green-500/20 border-t-green-500 animate-spin"></div>
+          <p class="text-xs font-black text-gray-500 uppercase tracking-widest">Synchronizing...</p>
         </div>
-        <div class="flex gap-2">
-          <button
-            @click="changePage(pagination.page - 1)"
-            :disabled="pagination.page <= 1"
-            class="px-3 py-1 border rounded disabled:opacity-50"
-            :class="isDarkMode ? 'border-slate-600 text-slate-300' : 'border-purple-300 text-purple-700'"
-          >
-            <i class="pi pi-chevron-left"></i>
-          </button>
-          <span class="px-3 py-1">Page {{ pagination.page }} of {{ pagination.totalPages }}</span>
-          <button
-            @click="changePage(pagination.page + 1)"
-            :disabled="pagination.page >= pagination.totalPages"
-            class="px-3 py-1 border rounded disabled:opacity-50"
-            :class="isDarkMode ? 'border-slate-600 text-slate-300' : 'border-purple-300 text-purple-700'"
-          >
-            <i class="pi pi-chevron-right"></i>
-          </button>
+
+        <!-- Empty State -->
+        <div v-else-if="(activeTab === 'requests' && requests.length === 0) || (activeTab === 'documents' && documents.length === 0)" 
+             class="flex flex-col items-center justify-center py-24 text-center">
+          <div class="w-20 h-20 rounded-3xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-6">
+            <i class="pi pi-inbox text-3xl text-gray-400"></i>
+          </div>
+          <h4 class="text-lg font-black" :class="isDarkMode ? 'text-white' : 'text-slate-900'">No records found</h4>
+          <p class="text-sm font-medium text-gray-500 mt-2 max-w-xs">Try adjusting your search or filters to find what you're looking for.</p>
         </div>
-      </div>
-    </div>
-    </div><!-- END Requests Tab -->
 
-    <!-- DOCUMENTS TAB -->
-    <div v-if="activeTab === 'documents'" class="mx-6">
-      <!-- Documents Table -->
-      <div v-if="loadingDocuments" class="text-center py-12">
-        <i class="pi pi-spin pi-spinner text-2xl text-purple-600"></i>
-        <p class="mt-2" :class="isDarkMode ? 'text-slate-400' : 'text-purple-600'">Loading documents...</p>
-      </div>
-
-      <div v-else class="overflow-hidden transition-colors duration-300" :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-purple-200'">
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y" :class="isDarkMode ? 'divide-slate-700' : 'divide-purple-200'">
-            <thead :class="isDarkMode ? 'bg-slate-700' : 'bg-purple-100'">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Document</th>
-                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Category</th>
-                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">File</th>
-                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Downloads</th>
-                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Featured</th>
-                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-purple-700'">Actions</th>
+        <!-- Data Table -->
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr :class="isDarkMode ? 'bg-slate-900/50' : 'bg-slate-50'">
+                <template v-if="activeTab === 'requests'">
+                  <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Reference</th>
+                  <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Requester</th>
+                  <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Subject</th>
+                  <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Status</th>
+                  <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Priority</th>
+                  <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500 text-right">Actions</th>
+                </template>
+                <template v-else>
+                  <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Document</th>
+                  <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Category</th>
+                  <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500 text-center">Stats</th>
+                  <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500 text-right">Actions</th>
+                </template>
               </tr>
             </thead>
-            <tbody class="divide-y" :class="isDarkMode ? 'bg-slate-800 divide-slate-700' : 'bg-white divide-purple-200'">
-              <tr v-for="doc in documents" :key="doc.id" :class="isDarkMode ? 'hover:bg-slate-700/50' : 'hover:bg-purple-50/50'">
-                <td class="px-6 py-4">
-                  <div class="flex items-center">
-                    <i :class="doc.icon" class="text-2xl text-red-600 mr-3"></i>
-                    <div>
-                      <div class="text-sm font-medium" :class="isDarkMode ? 'text-white' : 'text-slate-900'">{{ doc.title }}</div>
-                      <div class="text-xs" :class="isDarkMode ? 'text-slate-500' : 'text-slate-500'">{{ doc.description }}</div>
+            <tbody class="divide-y" :class="isDarkMode ? 'divide-slate-700' : 'divide-slate-100'">
+              <template v-if="activeTab === 'requests'">
+                <tr v-for="request in requests" :key="request.id" class="group hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors duration-300">
+                  <td class="px-8 py-5">
+                    <span class="text-xs font-black text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg">
+                      #{{ request.request_id }}
+                    </span>
+                    <p class="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-widest">{{ formatDate(request.created_at) }}</p>
+                  </td>
+                  <td class="px-8 py-5">
+                    <p class="text-sm font-bold" :class="isDarkMode ? 'text-white' : 'text-slate-900'">{{ request.full_name }}</p>
+                    <p class="text-xs font-medium text-gray-500 mt-0.5">{{ request.email }}</p>
+                  </td>
+                  <td class="px-8 py-5 max-w-xs">
+                    <p class="text-sm font-medium truncate" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">{{ request.subject }}</p>
+                    <p class="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">{{ request.request_type }}</p>
+                  </td>
+                  <td class="px-8 py-5">
+                    <span class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest" :class="getStatusColor(request.status)">
+                      {{ request.status.replace('_', ' ') }}
+                    </span>
+                  </td>
+                  <td class="px-8 py-5">
+                    <span class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest" :class="getPriorityColor(request.priority)">
+                      {{ request.priority }}
+                    </span>
+                  </td>
+                  <td class="px-8 py-5 text-right">
+                    <div class="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <button @click="viewRequest(request)" class="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-all duration-300">
+                        <i class="pi pi-eye text-xs"></i>
+                      </button>
+                      <button @click="respondToRequest(request)" class="p-2.5 rounded-xl bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-all duration-300">
+                        <i class="pi pi-reply text-xs"></i>
+                      </button>
+                      <button @click="deleteRequest(request)" class="p-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300">
+                        <i class="pi pi-trash text-xs"></i>
+                      </button>
                     </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="px-2 py-1 text-xs font-semibold rounded-full capitalize" :class="getCategoryColor(doc.category)">
-                    {{ doc.category }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-xs" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">{{ doc.file_name || 'Document' }}</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm" :class="isDarkMode ? 'text-slate-300' : 'text-slate-900'">{{ doc.download_count }}</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span v-if="doc.is_featured" class="text-yellow-600">★ Featured</span>
-                  <span v-else class="text-slate-400">-</span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div class="flex gap-2">
-                    <button @click="editDocument(doc)" class="text-blue-600 hover:text-blue-900" title="Edit">
-                      <i class="pi pi-pencil"></i>
-                    </button>
-                    <a :href="doc.file_path" target="_blank" class="text-green-600 hover:text-green-900" title="Download">
-                      <i class="pi pi-download"></i>
-                    </a>
-                    <button @click="deleteDocument(doc)" class="text-red-600 hover:text-red-900" title="Delete">
-                      <i class="pi pi-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+                </tr>
+              </template>
+              <template v-else>
+                <tr v-for="doc in documents" :key="doc.id" class="group hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors duration-300">
+                  <td class="px-8 py-5">
+                    <div class="flex items-center space-x-4">
+                      <div class="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <i :class="doc.icon" class="text-xl text-red-500"></i>
+                      </div>
+                      <div>
+                        <p class="text-sm font-bold" :class="isDarkMode ? 'text-white' : 'text-slate-900'">{{ doc.title }}</p>
+                        <p class="text-xs font-medium text-gray-500 mt-0.5 truncate max-w-[200px]">{{ doc.description }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-8 py-5">
+                    <span class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest" :class="getCategoryColor(doc.category)">
+                      {{ doc.category }}
+                    </span>
+                  </td>
+                  <td class="px-8 py-5 text-center">
+                    <div class="inline-flex flex-col items-center">
+                      <span class="text-sm font-black" :class="isDarkMode ? 'text-white' : 'text-slate-900'">{{ doc.download_count }}</span>
+                      <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Downloads</span>
+                    </div>
+                  </td>
+                  <td class="px-8 py-5 text-right">
+                    <div class="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <button @click="editDocument(doc)" class="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-all duration-300">
+                        <i class="pi pi-pencil text-xs"></i>
+                      </button>
+                      <a :href="doc.file_path" target="_blank" class="p-2.5 rounded-xl bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-all duration-300">
+                        <i class="pi pi-download text-xs"></i>
+                      </a>
+                      <button @click="deleteDocument(doc)" class="p-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300">
+                        <i class="pi pi-trash text-xs"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
+
+        <!-- Modern Pagination -->
+        <div v-if="pagination.totalPages > 1" 
+             class="px-8 py-6 border-t flex flex-col sm:flex-row justify-between items-center gap-4" 
+             :class="isDarkMode ? 'border-slate-700 bg-slate-900/30' : 'border-slate-100 bg-slate-50/30'">
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">
+            Showing <span class="text-green-500">{{ (pagination.page - 1) * pagination.limit + 1 }}</span> to 
+            <span class="text-green-500">{{ Math.min(pagination.page * pagination.limit, pagination.total) }}</span> of 
+            <span class="text-green-500">{{ pagination.total }}</span> entries
+          </p>
+          <div class="flex items-center space-x-2">
+            <button
+              @click="changePage(pagination.page - 1)"
+              :disabled="pagination.page <= 1"
+              class="p-2.5 rounded-xl border transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
+              :class="isDarkMode ? 'border-slate-700 text-slate-400 hover:bg-slate-700' : 'border-slate-200 text-slate-600 hover:bg-white'"
+            >
+              <i class="pi pi-chevron-left text-xs"></i>
+            </button>
+            <div class="flex items-center space-x-1">
+              <span class="text-xs font-black px-4 py-2 rounded-xl bg-green-500 text-white shadow-lg shadow-green-600/20">
+                {{ pagination.page }}
+              </span>
+              <span class="text-xs font-bold text-gray-400 px-2">of</span>
+              <span class="text-xs font-black px-4 py-2 rounded-xl border" :class="isDarkMode ? 'border-slate-700 text-white' : 'border-slate-200 text-slate-900'">
+                {{ pagination.totalPages }}
+              </span>
+            </div>
+            <button
+              @click="changePage(pagination.page + 1)"
+              :disabled="pagination.page >= pagination.totalPages"
+              class="p-2.5 rounded-xl border transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
+              :class="isDarkMode ? 'border-slate-700 text-slate-400 hover:bg-slate-700' : 'border-slate-200 text-slate-600 hover:bg-white'"
+            >
+              <i class="pi pi-chevron-right text-xs"></i>
+            </button>
+          </div>
+        </div>
       </div>
-    </div><!-- END Documents Tab -->
+    </div>
 
     <!-- View Request Modal -->
     <Dialog v-model:visible="showViewModal" modal header="RTI Request Details" :style="{ width: '800px' }">

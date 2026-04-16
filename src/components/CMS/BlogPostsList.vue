@@ -172,195 +172,142 @@ const exportPosts = () => {
 </script>
 
 <template>
-  <div class="space-y-8 animate-fade-in">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-      <div>
-        <h1 class="text-4xl font-bold" :class="isDarkMode ? 'text-white' : 'text-gray-900'">
-          Blog Posts
-        </h1>
-        <p class="mt-3 text-lg" :class="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
-          Manage your blog posts and content
-        </p>
-      </div>
-      
-      <div class="flex gap-4">
-        <button
-          @click="exportPosts"
-          class="px-6 py-3 border rounded-lg font-medium transition-colors duration-200"
-          :class="isDarkMode 
-            ? 'border-slate-600 text-slate-300 hover:bg-slate-700' 
-            : 'border-gray-300 text-gray-700 hover:bg-gray-50'"
-        >
-          <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Export
-        </button>
+  <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <!-- Header with Modern Design -->
+    <div class="p-8 rounded-3xl border transition-all duration-500 shadow-xl" 
+         :class="isDarkMode ? 'bg-slate-800/50 border-slate-700 shadow-slate-950/20' : 'bg-white border-slate-200 shadow-slate-200/50'">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+          <div class="flex items-center space-x-2 text-[10px] font-black uppercase tracking-[0.2em] text-green-500 mb-2">
+            <i class="pi pi-file-edit"></i>
+            <span>Editorial Hub</span>
+          </div>
+          <h1 class="text-4xl font-black tracking-tight" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
+            Blog Posts
+          </h1>
+          <p class="mt-2 text-sm font-medium" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
+            Manage your articles, announcements, and market insights.
+          </p>
+        </div>
         
-        <button
-          @click="emit('create')"
-          class="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
-        >
-          <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-          New Post
-        </button>
+        <div class="flex items-center gap-3">
+          <button
+            @click="exportPosts"
+            class="p-3 rounded-2xl border transition-all duration-300 active:scale-95 shadow-sm"
+            :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'"
+            title="Export Data"
+          >
+            <i class="pi pi-download"></i>
+          </button>
+          
+          <button
+            @click="emit('create')"
+            class="px-6 py-3 bg-green-600 hover:bg-green-500 text-white text-xs font-black uppercase tracking-widest rounded-2xl flex items-center gap-3 transition-all duration-300 shadow-lg shadow-green-600/20 active:scale-95"
+          >
+            <i class="pi pi-plus-circle"></i>
+            <span>New Post</span>
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Error Message -->
-    <div v-if="error" class="p-4 rounded-lg bg-red-50 border border-red-200">
-      <p class="text-red-700 text-sm">{{ error }}</p>
+    <div v-if="error" class="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center space-x-3">
+      <i class="pi pi-exclamation-circle text-red-500"></i>
+      <p class="text-red-500 text-xs font-bold uppercase tracking-wider">{{ error }}</p>
     </div>
 
-    <!-- Filters -->
-    <div class="flex flex-col lg:flex-row gap-6 p-8 rounded-2xl shadow-lg border"
-         :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'">
-      
-      <!-- Status Filter -->
-      <div class="flex flex-wrap gap-3">
+    <!-- Modern Filters Bar -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+      <!-- Status Filter Tabs -->
+      <div class="lg:col-span-7 flex p-1.5 rounded-2xl transition-all duration-500" 
+           :class="isDarkMode ? 'bg-slate-800/50 border border-slate-700' : 'bg-white border border-slate-200 shadow-sm'">
         <button
           v-for="status in statusOptions"
           :key="status.value"
           @click="selectedStatus = status.value; currentPage = 1"
-          class="px-6 py-3 rounded-lg text-base font-medium transition-colors duration-200"
+          class="flex-1 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2"
           :class="selectedStatus === status.value
-            ? 'bg-green-600 text-white'
-            : (isDarkMode ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')"
+            ? 'bg-green-600 text-white shadow-lg shadow-green-600/20'
+            : 'text-gray-500 hover:text-green-500'"
         >
-          {{ status.label }}
-          <span class="ml-2 px-3 py-1 rounded-full text-sm font-bold"
-                :class="selectedStatus === status.value 
-                  ? 'bg-white/20 text-white' 
-                  : (isDarkMode ? 'bg-slate-600 text-slate-200' : 'bg-white text-gray-600')"
-          >
+          <span>{{ status.label }}</span>
+          <span class="px-2 py-0.5 rounded-md text-[9px]"
+                :class="selectedStatus === status.value ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-gray-400'">
             {{ status.count.value }}
           </span>
         </button>
       </div>
 
-      <!-- Search -->
-      <div class="flex-1 max-w-lg">
-        <div class="relative">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search posts..."
-            class="w-full pl-12 pr-6 py-4 text-lg border rounded-lg focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-colors duration-200"
-            :class="isDarkMode 
-              ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' 
-              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'"
-          />
-          <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 h-6 w-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
+      <!-- Search Bar -->
+      <div class="lg:col-span-5 relative group">
+        <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors"></i>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search articles..."
+          class="w-full pl-11 pr-4 py-3.5 rounded-2xl border text-sm font-medium transition-all duration-300 focus:ring-4 focus:ring-green-500/10 outline-none"
+          :class="isDarkMode ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-500 focus:border-green-500/50' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:border-green-500'"
+        />
+        <button v-if="searchQuery" @click="searchQuery = ''" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500">
+          <i class="pi pi-times-circle"></i>
+        </button>
       </div>
-
-      <!-- Clear Filters -->
-      <button
-        v-if="selectedStatus !== 'all' || searchQuery"
-        @click="clearFilters"
-        class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
-      >
-        Clear Filters
-      </button>
     </div>
 
-    <!-- Posts List -->
-    <div class="rounded-2xl border-2 overflow-hidden shadow-xl" 
-         :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'">
+    <!-- Posts Content Area -->
+    <div class="rounded-3xl border overflow-hidden transition-all duration-500" 
+         :class="isDarkMode ? 'bg-slate-800/50 border-slate-700 shadow-2xl shadow-slate-950/20' : 'bg-white border-slate-200 shadow-xl shadow-slate-200/50'">
       
       <!-- Loading State -->
-      <div v-if="isLoading" class="p-8 text-center">
-        <svg class="animate-spin h-8 w-8 mx-auto text-yellow-500" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p class="mt-2" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">
-          Loading posts...
-        </p>
+      <div v-if="isLoading" class="flex flex-col items-center justify-center py-32 space-y-4">
+        <div class="w-12 h-12 rounded-full border-4 border-green-500/20 border-t-green-500 animate-spin"></div>
+        <p class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Synchronizing Articles...</p>
       </div>
 
-      <!-- Table -->
+      <!-- Table View -->
       <div v-else-if="paginatedPosts.length > 0" class="overflow-x-auto">
-        <table class="w-full">
-          <thead class="border-b-2" :class="isDarkMode ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-600"
-                  :class="isDarkMode ? 'text-slate-300' : 'text-slate-500'"
-                  @click="handleSort('title')">
-                <div class="flex items-center">
-                  Title
-                  <svg v-if="sortBy === 'title'" class="ml-1 w-4 h-4" :class="sortOrder === 'asc' ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr :class="isDarkMode ? 'bg-slate-900/50' : 'bg-slate-50'">
+              <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500 cursor-pointer group" @click="handleSort('title')">
+                <div class="flex items-center space-x-2">
+                  <span>Article Details</span>
+                  <i v-if="sortBy === 'title'" :class="['pi text-[8px]', sortOrder === 'asc' ? 'pi-sort-amount-up' : 'pi-sort-amount-down']"></i>
                 </div>
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                  :class="isDarkMode ? 'text-slate-300' : 'text-slate-500'">
-                Status
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                  :class="isDarkMode ? 'text-slate-300' : 'text-slate-500'">
-                Author
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-600"
-                  :class="isDarkMode ? 'text-slate-300' : 'text-slate-500'"
-                  @click="handleSort('created_at')">
-                <div class="flex items-center">
-                  Created
-                  <svg v-if="sortBy === 'created_at'" class="ml-1 w-4 h-4" :class="sortOrder === 'asc' ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
+              <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Status</th>
+              <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500">Author</th>
+              <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500 cursor-pointer" @click="handleSort('updated_at')">
+                <div class="flex items-center space-x-2">
+                  <span>Timeline</span>
+                  <i v-if="sortBy === 'updated_at'" :class="['pi text-[8px]', sortOrder === 'asc' ? 'pi-sort-amount-up' : 'pi-sort-amount-down']"></i>
                 </div>
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-600"
-                  :class="isDarkMode ? 'text-slate-300' : 'text-slate-500'"
-                  @click="handleSort('updated_at')">
-                <div class="flex items-center">
-                  Updated
-                  <svg v-if="sortBy === 'updated_at'" class="ml-1 w-4 h-4" :class="sortOrder === 'asc' ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </th>
-              <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider"
-                  :class="isDarkMode ? 'text-slate-300' : 'text-slate-500'">
-                Actions
-              </th>
+              <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-500 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody class="divide-y" :class="isDarkMode ? 'divide-slate-700' : 'divide-slate-200'">
-            <tr v-for="post in paginatedPosts" :key="post.id" 
-                class="border-b"
-                :class="isDarkMode ? 'border-slate-600' : 'border-gray-200'">
-              
-              <!-- Title & Excerpt -->
-              <td class="px-6 py-4">
-                <div class="flex items-start space-x-3">
-                  <div v-if="post.featured_image" class="flex-shrink-0">
-                    <img :src="post.featured_image" :alt="post.title" class="w-10 h-10 rounded-lg object-cover" />
+          <tbody class="divide-y" :class="isDarkMode ? 'divide-slate-700' : 'divide-slate-100'">
+            <tr v-for="post in paginatedPosts" :key="post.id" class="group hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors duration-300">
+              <!-- Article Info -->
+              <td class="px-8 py-6">
+                <div class="flex items-center space-x-5">
+                  <div class="relative flex-shrink-0">
+                    <img v-if="post.featured_image" :src="post.featured_image" :alt="post.title" class="w-14 h-14 rounded-2xl object-cover shadow-md transition-transform duration-500" />
+                    <div v-else class="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                      <i class="pi pi-image text-gray-400"></i>
+                    </div>
                   </div>
-                  <div class="flex-1 min-w-0 max-w-md">
-                    <h3 class="text-sm font-semibold truncate" :class="isDarkMode ? 'text-white' : 'text-gray-900'">
+                  <div class="min-w-0 max-w-md">
+                    <h3 class="text-sm font-black truncate mb-1" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
                       {{ post.title }}
                     </h3>
-                    <p class="text-xs mt-1 line-clamp-2" :class="isDarkMode ? 'text-slate-400' : 'text-gray-600'">
+                    <p class="text-xs font-medium text-gray-500 line-clamp-1 mb-2">
                       {{ getCleanExcerpt(post) }}
                     </p>
-                    <div v-if="Array.isArray(post.tags) && post.tags.length > 0" class="flex flex-wrap gap-1 mt-2">
-                      <span
-                        v-for="tag in post.tags.slice(0, 2)"
-                        :key="tag"
-                        class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200"
-                      >
-                        {{ tag }}
-                      </span>
-                      <span v-if="post.tags.length > 2" class="text-xs" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
-                        +{{ post.tags.length - 2 }}
+                    <div class="flex flex-wrap gap-1.5">
+                      <span v-for="tag in post.tags?.slice(0, 3)" :key="tag" class="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-700 text-gray-500">
+                        #{{ tag }}
                       </span>
                     </div>
                   </div>
@@ -368,77 +315,47 @@ const exportPosts = () => {
               </td>
 
               <!-- Status -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
-                      :class="post.status === 'published' ? 'bg-green-100 text-green-800' : 
-                              post.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
-                              'bg-red-100 text-red-800'">
+              <td class="px-8 py-6">
+                <span class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-2" 
+                      :class="post.status === 'published' ? 'bg-green-500/10 text-green-500' : 
+                              post.status === 'draft' ? 'bg-yellow-500/10 text-yellow-500' : 
+                              'bg-red-500/10 text-red-500'">
+                  <div class="w-1.5 h-1.5 rounded-full" :class="post.status === 'published' ? 'bg-green-500' : post.status === 'draft' ? 'bg-yellow-500' : 'bg-red-500'"></div>
                   {{ post.status }}
                 </span>
               </td>
 
               <!-- Author -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-xs" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
-                  {{ getAuthorName(post).split(' ')[0] }}
+              <td class="px-8 py-6">
+                <div class="flex items-center space-x-3">
+                  <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center text-[10px] font-black text-gray-500">
+                    {{ getAuthorName(post).charAt(0) }}
+                  </div>
+                  <span class="text-xs font-bold" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
+                    {{ getAuthorName(post).split(' ')[0] }}
+                  </span>
                 </div>
               </td>
 
-              <!-- Created Date -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-xs" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
-                  {{ formatRelativeTime(post.created_at) }}
-                </div>
-                <div class="text-xs" :class="isDarkMode ? 'text-slate-500' : 'text-slate-400'">
-                  {{ getShortDate(post.created_at) }}
-                </div>
-              </td>
-
-              <!-- Updated Date -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-xs" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
-                  {{ formatRelativeTime(post.updated_at) }}
-                </div>
-                <div class="text-xs" :class="isDarkMode ? 'text-slate-500' : 'text-slate-400'">
-                  {{ getShortDate(post.updated_at) }}
+              <!-- Timeline -->
+              <td class="px-8 py-6">
+                <div class="flex flex-col">
+                  <span class="text-xs font-bold" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">{{ formatRelativeTime(post.updated_at) }}</span>
+                  <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">{{ getShortDate(post.updated_at) }}</span>
                 </div>
               </td>
 
               <!-- Actions -->
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex justify-end space-x-2">
-                  <a
-                    :href="`/blog/${post.slug}`"
-                    target="_blank"
-                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                    title="View Post"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
+              <td class="px-8 py-6 text-right">
+                <div class="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <a :href="`/blog/${post.slug}`" target="_blank" class="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-all duration-300" title="View Live">
+                    <i class="pi pi-external-link text-xs"></i>
                   </a>
-                  
-                  <button
-                    v-if="canEditPost(post)"
-                    @click="emit('edit', post)"
-                    class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                    title="Edit Post"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
+                  <button v-if="canEditPost(post)" @click="emit('edit', post)" class="p-2.5 rounded-xl bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white transition-all duration-300" title="Edit Article">
+                    <i class="pi pi-pencil text-xs"></i>
                   </button>
-                  
-                  <button
-                    v-if="canEditPost(post)"
-                    @click="handleDelete(post)"
-                    class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                    title="Delete Post"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                  <button v-if="canEditPost(post)" @click="handleDelete(post)" class="p-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300" title="Delete Article">
+                    <i class="pi pi-trash text-xs"></i>
                   </button>
                 </div>
               </td>
@@ -448,68 +365,63 @@ const exportPosts = () => {
       </div>
 
       <!-- Empty State -->
-      <div v-else class="p-12 text-center">
-        <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-        </svg>
-        <h3 class="mt-2 text-sm font-medium" :class="isDarkMode ? 'text-slate-300' : 'text-slate-900'">
-          {{ searchQuery || selectedStatus !== 'all' ? 'No posts found' : 'No blog posts yet' }}
+      <div v-else class="flex flex-col items-center justify-center py-32 text-center">
+        <div class="w-24 h-24 rounded-3xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center mb-6">
+          <i class="pi pi-folder-open text-4xl text-gray-300"></i>
+        </div>
+        <h3 class="text-xl font-black" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
+          {{ searchQuery || selectedStatus !== 'all' ? 'No matches found' : 'Start your story' }}
         </h3>
-        <p class="mt-1 text-sm" :class="isDarkMode ? 'text-slate-500' : 'text-slate-500'">
-          {{ searchQuery || selectedStatus !== 'all' ? 'Try adjusting your filters.' : 'Get started by creating your first blog post.' }}
+        <p class="mt-2 text-sm font-medium text-gray-500 max-w-xs">
+          {{ searchQuery || selectedStatus !== 'all' ? 'Try refining your search terms or status filters.' : 'Your blog is empty. Create your first article to engage your audience.' }}
         </p>
-        <div v-if="!searchQuery && selectedStatus === 'all'" class="mt-6">
-          <button
-            @click="emit('create')"
-            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
-          >
+        <div v-if="!searchQuery && selectedStatus === 'all'" class="mt-8">
+          <button @click="emit('create')" class="px-8 py-3 bg-green-600 hover:bg-green-500 text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all duration-300 shadow-lg shadow-green-600/20 active:scale-95">
             Create First Post
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Pagination -->
-    <div v-if="totalPages > 1" class="flex items-center justify-between">
-      <div class="text-sm" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">
-        Showing {{ Math.min((currentPage - 1) * postsPerPage + 1, filteredPosts.length) }} to 
-        {{ Math.min(currentPage * postsPerPage, filteredPosts.length) }} of 
-        {{ filteredPosts.length }} posts
-      </div>
+    <!-- Modern Pagination -->
+    <div v-if="totalPages > 1" class="flex flex-col sm:flex-row justify-between items-center gap-6 pt-4">
+      <p class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+        Displaying <span class="text-green-500">{{ Math.min((currentPage - 1) * postsPerPage + 1, filteredPosts.length) }}</span> - 
+        <span class="text-green-500">{{ Math.min(currentPage * postsPerPage, filteredPosts.length) }}</span> of 
+        <span class="text-green-500">{{ filteredPosts.length }}</span> Articles
+      </p>
       
-      <div class="flex space-x-1">
+      <div class="flex items-center space-x-2">
         <button
           @click="currentPage = currentPage - 1"
           :disabled="currentPage <= 1"
-          class="px-3 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          :class="isDarkMode 
-            ? 'text-slate-300 hover:bg-slate-700 disabled:hover:bg-transparent' 
-            : 'text-slate-700 hover:bg-slate-100 disabled:hover:bg-transparent'"
+          class="p-3 rounded-xl border transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
+          :class="isDarkMode ? 'border-slate-700 text-slate-400 hover:bg-slate-700' : 'border-slate-200 text-slate-600 hover:bg-white shadow-sm'"
         >
-          Previous
+          <i class="pi pi-chevron-left text-xs"></i>
         </button>
         
-        <button
-          v-for="page in Math.min(totalPages, 5)"
-          :key="page"
-          @click="currentPage = page"
-          class="px-3 py-2 text-sm font-medium rounded-lg transition-colors"
-          :class="currentPage === page
-            ? 'bg-green-600 text-white'
-            : (isDarkMode ? 'text-slate-300 hover:bg-slate-700' : 'text-slate-700 hover:bg-slate-100')"
-        >
-          {{ page }}
-        </button>
+        <div class="flex items-center space-x-1">
+          <button
+            v-for="page in totalPages"
+            :key="page"
+            @click="currentPage = page"
+            class="w-10 h-10 rounded-xl text-xs font-black transition-all duration-300"
+            :class="currentPage === page
+              ? 'bg-green-600 text-white shadow-lg shadow-green-600/20'
+              : (isDarkMode ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-white shadow-sm')"
+          >
+            {{ page }}
+          </button>
+        </div>
         
         <button
           @click="currentPage = currentPage + 1"
           :disabled="currentPage >= totalPages"
-          class="px-3 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          :class="isDarkMode 
-            ? 'text-slate-300 hover:bg-slate-700 disabled:hover:bg-transparent' 
-            : 'text-slate-700 hover:bg-slate-100 disabled:hover:bg-transparent'"
+          class="p-3 rounded-xl border transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
+          :class="isDarkMode ? 'border-slate-700 text-slate-400 hover:bg-slate-700' : 'border-slate-200 text-slate-600 hover:bg-white shadow-sm'"
         >
-          Next
+          <i class="pi pi-chevron-right text-xs"></i>
         </button>
       </div>
     </div>

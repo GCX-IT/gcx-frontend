@@ -93,260 +93,301 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-8">
-    <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent">
-        Dashboard
-      </h1>
-      <p class="mt-2 text-lg" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">
-        Welcome back, {{ user?.name || 'User' }}! Here's what's happening with your content.
-      </p>
+  <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <!-- Header with Glassmorphism -->
+    <div class="relative overflow-hidden rounded-3xl p-8 bg-gradient-to-br from-green-600 to-emerald-800 shadow-2xl shadow-green-900/20">
+      <div class="relative z-10">
+        <div class="flex items-center space-x-4 mb-4">
+          <div class="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+            <i class="pi pi-sparkles text-2xl text-green-300"></i>
+          </div>
+          <span class="px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full text-xs font-bold text-green-100 uppercase tracking-widest border border-white/10">
+            CMS Overview
+          </span>
+        </div>
+        <h1 class="text-5xl font-black text-white tracking-tight">
+          Welcome back, <span class="text-green-300">{{ user?.name || 'User' }}</span>!
+        </h1>
+        <p class="mt-4 text-lg text-green-100/80 max-w-2xl font-medium leading-relaxed">
+          Your content ecosystem is thriving. Here's a snapshot of your current platform performance and recent updates.
+        </p>
+        
+        <!-- Quick Stats Overlay -->
+        <div class="mt-8 flex items-center space-x-8">
+          <div class="flex items-center space-x-3">
+            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span class="text-sm font-bold text-green-100 uppercase tracking-wider">System Online</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+            <span class="text-sm font-bold text-green-100 uppercase tracking-wider">{{ dashboardData.stats.publishedPosts + dashboardData.stats.publishedPages }} Live Assets</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Decorative Elements -->
+      <div class="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-64 h-64 bg-green-400/10 rounded-full blur-3xl"></div>
     </div>
 
     <!-- Loading State -->
-    <div v-if="dashboardData.loading" class="flex items-center justify-center py-12">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+    <div v-if="dashboardData.loading" class="flex flex-col items-center justify-center py-24 space-y-4">
+      <div class="relative">
+        <div class="w-16 h-16 rounded-full border-4 border-green-500/20 border-t-green-500 animate-spin"></div>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <i class="pi pi-spin pi-spinner text-green-500"></i>
+        </div>
+      </div>
+      <p class="text-sm font-bold text-gray-500 uppercase tracking-widest animate-pulse">Synchronizing Data...</p>
     </div>
 
     <!-- Dashboard Content -->
-    <div v-else>
-      <!-- Stats Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div v-else class="space-y-8">
+      <!-- Stats Grid - Modern Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Total Posts -->
-        <div class="group relative overflow-hidden rounded-xl border p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-             :class="isDarkMode ? 'bg-slate-900 border-slate-600 hover:border-blue-400 shadow-lg shadow-slate-900/50' : 'bg-white border-slate-200 hover:border-blue-300'">
-          <div class="flex items-center justify-between">
+        <div class="group relative p-6 rounded-3xl border transition-all duration-300 overflow-hidden"
+             :class="isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'">
+          <div class="relative z-10 flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium mb-1" :class="isDarkMode ? 'text-blue-300' : 'text-slate-600'">
-                Total Posts
+              <p class="text-[10px] font-black uppercase tracking-[0.2em] mb-2" :class="isDarkMode ? 'text-blue-400' : 'text-blue-600'">
+                Blog Ecosystem
               </p>
-              <p class="text-3xl font-bold" :class="isDarkMode ? 'text-blue-100' : 'text-slate-900'">
+              <h3 class="text-4xl font-black tracking-tighter" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
                 {{ dashboardData.stats.totalPosts }}
-              </p>
+              </h3>
+              <p class="text-xs font-bold mt-1 text-gray-500 uppercase tracking-wider">Total Articles</p>
             </div>
-            <div class="p-3 rounded-xl bg-blue-500/20 group-hover:scale-110 transition-transform" :class="isDarkMode ? 'bg-blue-500/30' : 'bg-blue-100'">
-              <i class="pi pi-file-edit text-2xl text-blue-400"></i>
+            <div class="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center transition-all duration-300">
+              <i class="pi pi-file-edit text-2xl" :class="isDarkMode ? 'text-blue-400' : 'text-blue-600'"></i>
             </div>
           </div>
-          <div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div class="mt-6 flex items-center space-x-4">
+            <div class="flex-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div class="h-full bg-blue-500 rounded-full" :style="{ width: (dashboardData.stats.publishedPosts / dashboardData.stats.totalPosts * 100) + '%' }"></div>
+            </div>
+            <span class="text-[10px] font-black text-gray-500 uppercase">{{ Math.round(dashboardData.stats.publishedPosts / dashboardData.stats.totalPosts * 100) || 0 }}% Live</span>
+          </div>
         </div>
 
-        <!-- Published Posts -->
-        <div class="group relative overflow-hidden rounded-xl border p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-             :class="isDarkMode ? 'bg-slate-900 border-slate-600 hover:border-green-400 shadow-lg shadow-slate-900/50' : 'bg-white border-slate-200 hover:border-green-300'">
-          <div class="flex items-center justify-between">
+        <!-- Published -->
+        <div class="group relative p-6 rounded-3xl border transition-all duration-300 overflow-hidden"
+             :class="isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'">
+          <div class="relative z-10 flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium mb-1" :class="isDarkMode ? 'text-green-300' : 'text-slate-600'">
-                Published
+              <p class="text-[10px] font-black uppercase tracking-[0.2em] mb-2" :class="isDarkMode ? 'text-green-400' : 'text-green-600'">
+                Active Content
               </p>
-              <p class="text-3xl font-bold" :class="isDarkMode ? 'text-green-100' : 'text-green-600'">
+              <h3 class="text-4xl font-black tracking-tighter" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
                 {{ dashboardData.stats.publishedPosts }}
-              </p>
+              </h3>
+              <p class="text-xs font-bold mt-1 text-gray-500 uppercase tracking-wider">Published</p>
             </div>
-            <div class="p-3 rounded-xl bg-green-500/20 group-hover:scale-110 transition-transform" :class="isDarkMode ? 'bg-green-500/30' : 'bg-green-100'">
-              <i class="pi pi-check-circle text-2xl text-green-400"></i>
+            <div class="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center transition-all duration-300">
+              <i class="pi pi-check-circle text-2xl" :class="isDarkMode ? 'text-green-400' : 'text-green-600'"></i>
             </div>
           </div>
-          <div class="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div class="mt-6">
+            <span class="px-3 py-1 bg-green-500/10 text-green-500 rounded-full text-[10px] font-black uppercase tracking-widest">Publicly Visible</span>
+          </div>
         </div>
 
-        <!-- Draft Posts -->
-        <div class="group relative overflow-hidden rounded-xl border p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-             :class="isDarkMode ? 'bg-slate-900 border-slate-600 hover:border-yellow-400 shadow-lg shadow-slate-900/50' : 'bg-white border-slate-200 hover:border-yellow-300'">
-          <div class="flex items-center justify-between">
+        <!-- Drafts -->
+        <div class="group relative p-6 rounded-3xl border transition-all duration-300 overflow-hidden"
+             :class="isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'">
+          <div class="relative z-10 flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium mb-1" :class="isDarkMode ? 'text-yellow-300' : 'text-slate-600'">
-                Drafts
+              <p class="text-[10px] font-black uppercase tracking-[0.2em] mb-2" :class="isDarkMode ? 'text-yellow-400' : 'text-yellow-600'">
+                In Progress
               </p>
-              <p class="text-3xl font-bold" :class="isDarkMode ? 'text-yellow-100' : 'text-yellow-600'">
+              <h3 class="text-4xl font-black tracking-tighter" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
                 {{ dashboardData.stats.draftPosts }}
-              </p>
+              </h3>
+              <p class="text-xs font-bold mt-1 text-gray-500 uppercase tracking-wider">Drafts</p>
             </div>
-            <div class="p-3 rounded-xl bg-yellow-500/20 group-hover:scale-110 transition-transform" :class="isDarkMode ? 'bg-yellow-500/30' : 'bg-yellow-100'">
-              <i class="pi pi-clock text-2xl text-yellow-400"></i>
+            <div class="w-14 h-14 rounded-2xl bg-yellow-500/10 flex items-center justify-center transition-all duration-300">
+              <i class="pi pi-clock text-2xl" :class="isDarkMode ? 'text-yellow-400' : 'text-yellow-600'"></i>
             </div>
           </div>
-          <div class="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div class="mt-6">
+            <span class="px-3 py-1 bg-yellow-500/10 text-yellow-500 rounded-full text-[10px] font-black uppercase tracking-widest">Awaiting Review</span>
+          </div>
         </div>
 
-        <!-- Media Files -->
-        <div class="group relative overflow-hidden rounded-xl border p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-             :class="isDarkMode ? 'bg-slate-900 border-slate-600 hover:border-purple-400 shadow-lg shadow-slate-900/50' : 'bg-white border-slate-200 hover:border-purple-300'">
-          <div class="flex items-center justify-between">
+        <!-- Media -->
+        <div class="group relative p-6 rounded-3xl border transition-all duration-300 overflow-hidden"
+             :class="isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200 shadow-sm'">
+          <div class="relative z-10 flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium mb-1" :class="isDarkMode ? 'text-purple-300' : 'text-slate-600'">
-                Media Files
+              <p class="text-[10px] font-black uppercase tracking-[0.2em] mb-2" :class="isDarkMode ? 'text-purple-400' : 'text-purple-600'">
+                Asset Library
               </p>
-              <p class="text-3xl font-bold" :class="isDarkMode ? 'text-purple-100' : 'text-purple-600'">
+              <h3 class="text-4xl font-black tracking-tighter" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
                 {{ dashboardData.stats.mediaFiles }}
-              </p>
+              </h3>
+              <p class="text-xs font-bold mt-1 text-gray-500 uppercase tracking-wider">Media Files</p>
             </div>
-            <div class="p-3 rounded-xl bg-purple-500/20 group-hover:scale-110 transition-transform" :class="isDarkMode ? 'bg-purple-500/30' : 'bg-purple-100'">
-              <i class="pi pi-image text-2xl text-purple-400"></i>
+            <div class="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center transition-all duration-300">
+              <i class="pi pi-image text-2xl" :class="isDarkMode ? 'text-purple-400' : 'text-purple-600'"></i>
             </div>
           </div>
-          <div class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div class="mt-6">
+            <span class="px-3 py-1 bg-purple-500/10 text-purple-500 rounded-full text-[10px] font-black uppercase tracking-widest">Optimized Storage</span>
+          </div>
         </div>
       </div>
-
-      <!-- Pages Stats Row -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Total Pages -->
-        <div class="group relative overflow-hidden rounded-xl border p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-             :class="isDarkMode ? 'bg-slate-900 border-slate-600 hover:border-indigo-400 shadow-lg shadow-slate-900/50' : 'bg-white border-slate-200 hover:border-indigo-300'">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium mb-1" :class="isDarkMode ? 'text-indigo-300' : 'text-slate-600'">
-                Total Pages
-              </p>
-              <p class="text-3xl font-bold" :class="isDarkMode ? 'text-indigo-100' : 'text-slate-900'">
-                {{ dashboardData.stats.totalPages }}
-              </p>
-            </div>
-            <div class="p-3 rounded-xl bg-indigo-500/20 group-hover:scale-110 transition-transform" :class="isDarkMode ? 'bg-indigo-500/30' : 'bg-indigo-100'">
-              <i class="pi pi-globe text-2xl text-indigo-400"></i>
-            </div>
-          </div>
-          <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        </div>
-
-        <!-- Published Pages -->
-        <div class="group relative overflow-hidden rounded-xl border p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-             :class="isDarkMode ? 'bg-slate-900 border-slate-600 hover:border-emerald-400 shadow-lg shadow-slate-900/50' : 'bg-white border-slate-200 hover:border-emerald-300'">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium mb-1" :class="isDarkMode ? 'text-emerald-300' : 'text-slate-600'">
-                Published Pages
-              </p>
-              <p class="text-3xl font-bold" :class="isDarkMode ? 'text-emerald-100' : 'text-emerald-600'">
-                {{ dashboardData.stats.publishedPages }}
-              </p>
-            </div>
-            <div class="p-3 rounded-xl bg-emerald-500/20 group-hover:scale-110 transition-transform" :class="isDarkMode ? 'bg-emerald-500/30' : 'bg-emerald-100'">
-              <i class="pi pi-check-circle text-2xl text-emerald-400"></i>
-            </div>
-          </div>
-          <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        </div>
-
-        <!-- Draft Pages -->
-        <div class="group relative overflow-hidden rounded-xl border p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-             :class="isDarkMode ? 'bg-slate-900 border-slate-600 hover:border-orange-400 shadow-lg shadow-slate-900/50' : 'bg-white border-slate-200 hover:border-orange-300'">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium mb-1" :class="isDarkMode ? 'text-orange-300' : 'text-slate-600'">
-                Draft Pages
-              </p>
-              <p class="text-3xl font-bold" :class="isDarkMode ? 'text-orange-100' : 'text-orange-600'">
-                {{ dashboardData.stats.draftPages }}
-              </p>
-            </div>
-            <div class="p-3 rounded-xl bg-orange-500/20 group-hover:scale-110 transition-transform" :class="isDarkMode ? 'bg-orange-500/30' : 'bg-orange-100'">
-              <i class="pi pi-clock text-2xl text-orange-400"></i>
-            </div>
-          </div>
-          <div class="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        </div>
-      </div>
-
 
       <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Quick Actions -->
-        <div class="rounded-xl border p-6 transition-all duration-300 hover:shadow-lg"
-             :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
-              Quick Actions
-            </h3>
-            <i class="pi pi-bolt text-green-500 text-xl"></i>
-          </div>
-          
-          <div class="space-y-4">
-            <button
-              @click="navigateToSection('posts')"
-              class="group w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
-              :class="isDarkMode ? 'border-slate-600 hover:bg-slate-700 hover:border-green-500' : 'border-slate-200 hover:bg-green-50 hover:border-green-300'"
-            >
-              <div class="flex items-center space-x-4">
-                <div class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 group-hover:scale-110 transition-transform">
-                  <i class="pi pi-plus text-blue-600 dark:text-blue-400"></i>
-                </div>
-                <span class="font-medium" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
-                  Create New Post
-                </span>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Quick Actions - Modern Sidebar Style -->
+        <div class="lg:col-span-1 space-y-6">
+          <div class="p-8 rounded-3xl border bg-gradient-to-b"
+               :class="isDarkMode ? 'from-slate-800 to-slate-900 border-slate-700' : 'from-white to-slate-50 border-slate-200'">
+            <div class="flex items-center justify-between mb-8">
+              <h3 class="text-xl font-black tracking-tight" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
+                Quick Actions
+              </h3>
+              <div class="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                <i class="pi pi-bolt text-green-500 text-sm"></i>
               </div>
-              <i class="pi pi-arrow-right text-slate-400 group-hover:text-green-500 transition-colors"></i>
-            </button>
+            </div>
             
-            <button
-              @click="navigateToSection('pages')"
-              class="group w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
-              :class="isDarkMode ? 'border-slate-600 hover:bg-slate-700 hover:border-green-500' : 'border-slate-200 hover:bg-green-50 hover:border-green-300'"
-            >
-              <div class="flex items-center space-x-4">
-                <div class="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 group-hover:scale-110 transition-transform">
-                  <i class="pi pi-globe text-purple-600 dark:text-purple-400"></i>
-                </div>
-                <span class="font-medium" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
-                  Manage Pages
-                </span>
-              </div>
-              <i class="pi pi-arrow-right text-slate-400 group-hover:text-green-500 transition-colors"></i>
-            </button>
-            
-            <button
-              @click="navigateToSection('images')"
-              class="group w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
-              :class="isDarkMode ? 'border-slate-600 hover:bg-slate-700 hover:border-green-500' : 'border-slate-200 hover:bg-green-50 hover:border-green-300'"
-            >
-              <div class="flex items-center space-x-4">
-                <div class="p-2 rounded-lg bg-green-100 dark:bg-green-900/30 group-hover:scale-110 transition-transform">
-                  <i class="pi pi-upload text-green-600 dark:text-green-400"></i>
-                </div>
-                <span class="font-medium" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
-                  Upload Media
-                </span>
-              </div>
-              <i class="pi pi-arrow-right text-slate-400 group-hover:text-green-500 transition-colors"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="rounded-xl border p-6 transition-all duration-300 hover:shadow-lg"
-             :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
-              Recent Activity
-            </h3>
-            <i class="pi pi-history text-green-500 text-xl"></i>
-          </div>
-          
-          <div class="space-y-4">
-            <div v-if="dashboardData.recentActivity.length > 0">
-              <div
-                v-for="activity in dashboardData.recentActivity"
-                :key="activity.id"
-                class="flex items-start space-x-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+            <div class="space-y-3">
+              <button
+                @click="navigateToSection('posts')"
+                class="group w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                :class="isDarkMode ? 'border-slate-700 bg-slate-900/50' : 'border-slate-200 bg-white'"
               >
-                <div class="w-3 h-3 rounded-full mt-1.5 flex-shrink-0" :class="getActivityColor(activity.color)"></div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
-                    {{ activity.message }}
-                  </p>
-                  <p class="text-xs mt-1" :class="isDarkMode ? 'text-slate-500' : 'text-slate-400'">
-                    {{ formatTimeAgo(activity.timestamp) }}
-                  </p>
+                <div class="flex items-center space-x-4">
+                  <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center transition-colors">
+                    <i class="pi pi-plus text-blue-500"></i>
+                  </div>
+                  <span class="text-sm font-bold transition-colors" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
+                    Create New Post
+                  </span>
+                </div>
+                <i class="pi pi-chevron-right text-[10px] text-gray-500 transition-all group-hover:translate-x-1"></i>
+              </button>
+              
+              <button
+                @click="navigateToSection('pages')"
+                class="group w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                :class="isDarkMode ? 'border-slate-700 bg-slate-900/50' : 'border-slate-200 bg-white'"
+              >
+                <div class="flex items-center space-x-4">
+                  <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center transition-colors">
+                    <i class="pi pi-globe text-purple-500"></i>
+                  </div>
+                  <span class="text-sm font-bold transition-colors" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
+                    Manage Pages
+                  </span>
+                </div>
+                <i class="pi pi-chevron-right text-[10px] text-gray-500 transition-all group-hover:translate-x-1"></i>
+              </button>
+              
+              <button
+                @click="navigateToSection('images')"
+                class="group w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                :class="isDarkMode ? 'border-slate-700 bg-slate-900/50' : 'border-slate-200 bg-white'"
+              >
+                <div class="flex items-center space-x-4">
+                  <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center transition-colors">
+                    <i class="pi pi-upload text-emerald-500"></i>
+                  </div>
+                  <span class="text-sm font-bold transition-colors" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
+                    Upload Media
+                  </span>
+                </div>
+                <i class="pi pi-chevron-right text-[10px] text-gray-500 transition-all group-hover:translate-x-1"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- System Status Card -->
+          <div class="p-6 rounded-3xl border bg-slate-900 border-slate-800 relative overflow-hidden group">
+            <div class="relative z-10">
+              <h4 class="text-xs font-black text-gray-500 uppercase tracking-widest mb-4">System Health</h4>
+              <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-gray-400">API Latency</span>
+                  <span class="text-xs font-black text-green-400">24ms</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-gray-400">DB Connectivity</span>
+                  <span class="text-xs font-black text-green-400">Optimal</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-gray-400">Uptime</span>
+                  <span class="text-xs font-black text-green-400">99.99%</span>
                 </div>
               </div>
             </div>
-            <div v-else class="text-center py-8">
-              <i class="pi pi-clock text-4xl text-slate-400 mb-4"></i>
-              <p class="text-sm" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
-                No recent activity
-              </p>
+            <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-green-500/5 rounded-full blur-2xl group-hover:bg-green-500/10 transition-all duration-700"></div>
+          </div>
+        </div>
+
+        <!-- Recent Activity - Modern Timeline Style -->
+        <div class="lg:col-span-2">
+          <div class="p-8 rounded-3xl border h-full"
+               :class="isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'">
+            <div class="flex items-center justify-between mb-8">
+              <div>
+                <h3 class="text-2xl font-black tracking-tight" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
+                  Recent Activity
+                </h3>
+                <p class="text-xs font-bold text-gray-500 mt-1 uppercase tracking-wider">Latest updates across the platform</p>
+              </div>
+              <button class="p-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-green-500 hover:text-white transition-all duration-300">
+                <i class="pi pi-refresh text-sm"></i>
+              </button>
+            </div>
+            
+            <div class="space-y-6 relative before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-100 dark:before:bg-gray-800">
+              <div v-if="dashboardData.recentActivity.length > 0" class="space-y-8">
+                <div
+                  v-for="activity in dashboardData.recentActivity"
+                  :key="activity.id"
+                  class="relative flex items-start space-x-6 group"
+                >
+                  <!-- Timeline Dot -->
+                  <div class="relative z-10 w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border-2 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:border-green-500 shadow-sm"
+                       :class="[
+                         isDarkMode ? 'border-slate-700' : 'border-gray-100',
+                         getActivityColor(activity.color).replace('bg-', 'text-')
+                       ]">
+                    <i :class="activity.icon || 'pi pi-circle-fill'" class="text-sm"></i>
+                  </div>
+                  
+                  <div class="flex-1 pt-1">
+                    <div class="flex items-center justify-between mb-1">
+                      <p class="text-sm font-bold" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
+                        {{ activity.message }}
+                      </p>
+                      <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
+                        {{ formatTimeAgo(activity.timestamp) }}
+                      </span>
+                    </div>
+                    <p class="text-xs font-medium text-gray-500 leading-relaxed">
+                      {{ activity.details || 'No additional details provided for this action.' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="flex flex-col items-center justify-center py-20 text-center">
+                <div class="w-20 h-20 rounded-3xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-6">
+                  <i class="pi pi-inbox text-3xl text-gray-400"></i>
+                </div>
+                <h4 class="text-lg font-black" :class="isDarkMode ? 'text-white' : 'text-slate-900'">All Quiet Here</h4>
+                <p class="text-sm font-medium text-gray-500 mt-2 max-w-xs">
+                  No recent activity recorded. Start creating content to see updates here.
+                </p>
+              </div>
+            </div>
+            
+            <div v-if="dashboardData.recentActivity.length > 0" class="mt-10 pt-6 border-t border-gray-100 dark:border-gray-800">
+              <button class="w-full py-4 rounded-2xl bg-gray-50 dark:bg-gray-800/50 text-xs font-black uppercase tracking-[0.2em] text-gray-500 hover:bg-green-500 hover:text-white transition-all duration-300">
+                View Full Audit Log
+              </button>
             </div>
           </div>
         </div>

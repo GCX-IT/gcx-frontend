@@ -236,141 +236,180 @@ const handleLogout = async () => {
 
 <template>
   <div 
-    class="fixed left-0 top-0 h-full w-72 z-40 transform transition-all duration-300 ease-in-out border-r shadow-xl bg-gray-900 border-gray-800 flex flex-col"
-    :class="isOpen ? 'translate-x-0' : '-translate-x-full'"
+    class="fixed left-0 top-0 h-full z-40 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) border-r shadow-2xl bg-gray-900 border-gray-800 flex flex-col overflow-hidden"
+    :class="[
+      isOpen ? 'w-72 translate-x-0' : 'w-20 translate-x-0 shadow-none',
+      'lg:translate-x-0'
+    ]"
   >
     <!-- Sidebar Header -->
-    <div class="flex items-center justify-between p-4 border-b border-gray-800">
-      <div class="flex items-center space-x-3">
-        <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-lg">
-          <img src="/logo_black.png" alt="GCX" class="h-5 w-auto" />
+    <div class="flex items-center h-20 border-b border-gray-800 bg-gray-900/50 overflow-hidden relative">
+      <div class="flex items-center px-5 min-w-[288px]">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-lg shadow-green-500/20 flex-shrink-0 cursor-pointer"
+             @click="emit('toggle')">
+          <img src="/logo_black.png" alt="GCX" class="h-6 w-auto brightness-0 invert" />
         </div>
-        <div>
-          <h1 class="text-lg font-bold text-white">
-            GCX CMS
+        <div class="ml-3 transition-all duration-300" :class="isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'">
+          <h1 class="text-xl font-black tracking-tight text-white leading-none">
+            GCX<span class="text-green-500">CMS</span>
           </h1>
-          <p class="text-xs text-gray-400 font-medium">
-            Content Management
+          <p class="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-bold mt-1">
+            Admin Portal
           </p>
         </div>
       </div>
       
-      <!-- Toggle Button for Mobile -->
-      <button
+      <!-- Expand Toggle Button (Visible when collapsed) -->
+      <button 
+        v-if="!isOpen"
         @click="emit('toggle')"
-        class="lg:hidden p-2 rounded-lg transition-colors hover:bg-gray-800 text-gray-400 hover:text-white"
+        class="absolute inset-0 w-full h-full flex items-center justify-center bg-transparent hover:bg-gray-800/30 transition-colors group"
       >
-        <i class="pi pi-times text-lg"></i>
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-lg shadow-green-500/20 group-hover:scale-105 transition-transform">
+          <img src="/logo_black.png" alt="GCX" class="h-6 w-auto brightness-0 invert" />
+        </div>
       </button>
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto p-4 space-y-2">
+    <nav class="flex-1 overflow-y-auto py-6 px-3 space-y-1 custom-scrollbar overflow-x-hidden">
       <template v-for="item in visibleItems" :key="item.id">
+        <!-- Section Header -->
+        <div v-if="(item.id === 'content' || item.id === 'people' || item.id === 'resources') && isOpen" 
+             class="px-4 pt-4 pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-600 truncate">
+          {{ item.label }}
+        </div>
+        <div v-else-if="(item.id === 'content' || item.id === 'people' || item.id === 'resources') && !isOpen"
+             class="h-6 flex items-center justify-center">
+          <div class="w-1 h-1 rounded-full bg-gray-700"></div>
+        </div>
+
         <!-- Parent Item without children -->
         <div v-if="!hasChildren(item)">
           <button
             @click="navigateToSection(item.id)"
-            class="w-full flex items-center space-x-4 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 group"
+            class="w-full flex items-center px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 group relative overflow-hidden mb-1"
             :class="isItemActive(item.id)
-              ? 'bg-green-600 text-white shadow-lg'
-              : 'text-white hover:bg-gray-800 hover:text-white'"
+              ? 'bg-green-600/20 text-green-400 shadow-inner shadow-green-500/10'
+              : 'text-gray-400 hover:bg-gray-800 hover:text-white'"
+            :title="!isOpen ? item.label : ''"
           >
-            <div class="w-6 h-6 flex items-center justify-center">
+            <!-- Active Indicator -->
+            <div v-if="isItemActive(item.id)" class="absolute left-0 top-2 bottom-2 w-1.5 bg-green-500 rounded-r-full shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+            
+            <div class="w-8 h-8 flex items-center justify-center flex-shrink-0 rounded-xl transition-all duration-300"
+                 :class="isItemActive(item.id) ? 'bg-green-500/20 text-green-400' : 'bg-gray-800/50 text-gray-500 group-hover:bg-gray-700 group-hover:text-white'">
               <i :class="item.icon" class="text-lg"></i>
             </div>
-            <span>{{ item.label }}</span>
+            <span class="ml-4 transition-all duration-500 whitespace-nowrap font-black uppercase tracking-widest text-[11px]" 
+                  :class="isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'">
+              {{ item.label }}
+            </span>
           </button>
         </div>
 
         <!-- Parent with Children (Dropdown) -->
-        <div v-else class="space-y-1">
+        <div v-else class="space-y-1 mb-1">
           <button
-            @click="toggleDropdown(item.id)"
-            class="w-full flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 group hover:bg-gray-800"
+            @click="isOpen ? toggleDropdown(item.id) : emit('toggle')"
+            class="w-full flex items-center px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300 group hover:bg-gray-800 relative overflow-hidden"
+            :class="isDropdownOpen(item.id) ? 'text-white bg-gray-800/50' : 'text-gray-400'"
+            :title="!isOpen ? item.label : ''"
           >
-            <div class="flex items-center space-x-4">
-              <div class="w-6 h-6 flex items-center justify-center">
-                <i :class="item.icon" class="text-lg text-white group-hover:text-white"></i>
+            <div class="flex items-center flex-1">
+              <div class="w-8 h-8 flex items-center justify-center flex-shrink-0 rounded-xl transition-all duration-300"
+                   :class="isDropdownOpen(item.id) ? 'bg-green-500/20 text-green-400' : 'bg-gray-800/50 text-gray-500 group-hover:bg-gray-700 group-hover:text-white'">
+                <i :class="item.icon" class="text-lg"></i>
               </div>
-              <span class="text-white group-hover:text-white">{{ item.label }}</span>
+              <span class="ml-4 transition-all duration-500 group-hover:text-white whitespace-nowrap font-black uppercase tracking-widest text-[11px]" 
+                    :class="isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'">
+                {{ item.label }}
+              </span>
             </div>
             <i 
+              v-if="isOpen"
               :class="[
-                'pi transition-transform duration-200 text-white',
-                isDropdownOpen(item.id) ? 'pi-chevron-down' : 'pi-chevron-right'
+                'pi transition-transform duration-300 text-[10px] ml-2',
+                isDropdownOpen(item.id) ? 'pi-chevron-down text-green-400' : 'pi-chevron-right text-gray-600'
               ]"
             ></i>
           </button>
           
           <!-- Dropdown Content -->
-          <div 
-            v-show="isDropdownOpen(item.id)"
-            class="space-y-1 ml-6 border-l border-gray-700 pl-4"
+          <transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="transform -translate-y-2 opacity-0"
+            enter-to-class="transform translate-y-0 opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="transform translate-y-0 opacity-100"
+            leave-to-class="transform -translate-y-2 opacity-0"
           >
-            <button
-              v-for="child in item.children"
-              :key="child.id"
-              @click="navigateToSection(child.id)"
-              class="w-full flex items-center space-x-4 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group"
-              :class="isItemActive(child.id)
-                ? 'bg-green-600 text-white shadow-lg'
-                : 'text-white hover:bg-gray-800 hover:text-white'"
+            <div 
+              v-show="isDropdownOpen(item.id) && isOpen"
+              class="space-y-1 mt-1 ml-4 pl-4 border-l border-gray-800"
             >
-              <div class="w-5 h-5 flex items-center justify-center">
-                <i :class="child.icon" class="text-base"></i>
-              </div>
-              <span>{{ child.label }}</span>
-            </button>
-          </div>
+              <button
+                v-for="child in item.children"
+                :key="child.id"
+                @click="navigateToSection(child.id)"
+                class="w-full flex items-center px-4 py-2.5 rounded-lg text-xs font-medium transition-all duration-200 group relative"
+                :class="isItemActive(child.id)
+                  ? 'text-green-400 bg-green-500/5'
+                  : 'text-gray-500 hover:text-white hover:bg-gray-800/30'"
+              >
+                <div class="w-4 h-4 flex items-center justify-center flex-shrink-0"
+                     :class="isItemActive(child.id) ? 'text-green-400' : 'text-gray-600 group-hover:text-white'">
+                  <i :class="child.icon" class="text-sm"></i>
+                </div>
+                <span class="ml-3 whitespace-nowrap">{{ child.label }}</span>
+              </button>
+            </div>
+          </transition>
         </div>
       </template>
     </nav>
 
     <!-- Fixed Bottom Section -->
-    <div class="shrink-0 bg-gray-900 border-t border-gray-800">
+    <div class="shrink-0 bg-gray-900/80 backdrop-blur-md border-t border-gray-800/50 overflow-hidden">
       <!-- User Info -->
-      <div class="px-6 py-4">
-        <div class="flex items-center space-x-3 p-3 rounded-lg bg-gray-800/50 border border-gray-700">
-          <div class="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center shadow-lg">
-            <span class="text-lg font-bold text-white">
-              {{ user?.name?.charAt(0)?.toUpperCase() }}
-            </span>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-white truncate">
-              {{ user?.name }}
-            </p>
-            <div class="flex items-center space-x-2">
-              <p class="text-xs text-green-400 font-medium capitalize">
-                {{ user?.role }}
-              </p>
-              <div class="flex items-center space-x-1">
-                <i class="pi pi-circle-fill text-green-500 text-xs"></i>
-                <span class="text-xs text-gray-400">{{ t('common.status.online') }}</span>
-              </div>
+      <div class="px-3 py-4">
+        <div class="flex items-center p-2 rounded-2xl bg-gray-800/50 border border-gray-700/50 hover:bg-gray-800 transition-all duration-300 group cursor-pointer overflow-hidden">
+          <div class="relative flex-shrink-0">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/20 transition-transform duration-300">
+              <span class="text-lg font-black text-white">
+                {{ user?.name?.charAt(0)?.toUpperCase() }}
+              </span>
+            </div>
+            <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center">
+              <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             </div>
           </div>
+          <div class="ml-4 flex-1 min-w-0 transition-all duration-500" :class="isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'">
+            <p class="text-xs font-black text-white truncate group-hover:text-green-400 transition-colors uppercase tracking-wider">
+              {{ user?.name }}
+            </p>
+            <p class="text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em] mt-0.5">
+              {{ user?.role }}
+            </p>
+          </div>
+          <button @click="handleLogout" 
+                  class="ml-2 p-2 text-gray-500 hover:text-red-400 transition-all duration-300"
+                  :class="isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 pointer-events-none'">
+            <i class="pi pi-sign-out"></i>
+          </button>
         </div>
       </div>
 
-      <!-- Logout Section -->
-      <div class="px-6 py-4 border-t-2 border-gray-700">
-        <button
-          @click="handleLogout"
-          class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 text-red-400 hover:bg-red-900/20 hover:text-red-300 group"
-        >
-          <i class="pi pi-sign-out text-base"></i>
-          <span>{{ t('navigation.menu.logout') }}</span>
-          <i class="pi pi-angle-right text-xs ml-auto opacity-0 group-hover:opacity-100 transition-opacity"></i>
-        </button>
-      </div>
-
       <!-- Footer -->
-      <div class="px-6 py-3 border-t border-gray-800 bg-gray-900/50">
-        <p class="text-xs text-gray-500 text-center">
-          © 2025 GCX Platform
-        </p>
+      <div class="px-6 py-4 bg-gray-950/50 min-w-[288px]">
+        <div class="flex items-center justify-between transition-opacity duration-300" :class="isOpen ? 'opacity-100' : 'opacity-0'">
+          <p class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">
+            v2.1.0
+          </p>
+          <p class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">
+            © 2026 GCX
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -412,17 +451,17 @@ button {
   box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
 }
 
-/* Hover effects */
+/* Reduced hover effects */
 button:hover {
-  transform: translateX(2px);
+  /* Removed translateX for a more stable feel */
 }
 
-/* Icon animations */
+/* Icon animations - more subtle */
 i {
   transition: transform 0.2s ease;
 }
 
 button:hover i {
-  transform: scale(1.1);
+  /* Removed scale(1.1) for a more stable feel */
 }
 </style>

@@ -40,7 +40,7 @@ const toggleSidebar = () => {
 </script>
 
 <template>
-    <div class="min-h-screen flex transition-colors duration-300" :class="isDarkMode ? 'bg-slate-900' : 'bg-slate-50'">
+    <div class="h-screen overflow-hidden flex transition-colors duration-300" :class="isDarkMode ? 'bg-slate-900' : 'bg-slate-50'">
     
     <!-- Sidebar -->
     <CMSSidebar
@@ -49,7 +49,8 @@ const toggleSidebar = () => {
     />
     
     <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col" :class="sidebarOpen ? 'lg:ml-72' : ''">
+    <div class="flex-1 min-w-0 flex flex-col transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)" 
+         :class="sidebarOpen ? 'lg:ml-72' : 'lg:ml-20'">
       <!-- Top Navigation -->
       <CMSNavbar 
         :sidebar-open="sidebarOpen"
@@ -57,7 +58,7 @@ const toggleSidebar = () => {
       />
       
       <!-- Main Content -->
-      <main class="flex-1 overflow-auto">
+      <main class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         <div class="container mx-auto px-6 py-8">
                          <!-- Dashboard Section -->
           <Dashboard v-if="activeSection === 'dashboard'" />
