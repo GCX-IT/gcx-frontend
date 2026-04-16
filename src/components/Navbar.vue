@@ -39,7 +39,7 @@ const navigation = computed(() => [
         items: [
           { name: 'Trading Services', href: '/services#trading', description: 'Commodity trading and market access' },
           { name: 'Market Data', href: '/services#market-data', description: 'Real-time market information and analytics' },
-          { name: 'GCX Certification Program in Commodity Trading', href: '#', description: 'Certificate Programme in Commodity Trading (CPCT)', external: true, inactive: true }
+          { name: 'GCX Certification Program in Commodity Trading', href: 'https://apps.gcx.com.gh/onlineforms/', description: 'Certificate Programme in Commodity Trading (CPCT)', external: true }
         ]
       },
       { 

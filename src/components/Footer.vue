@@ -76,7 +76,7 @@ const { t } = useI18n()
           <ul class="space-y-3">
             <li><router-link to="/membership" class="text-white transition-colors hover:text-yellow-400">Membership Types</router-link></li>
             <li><router-link to="/membership/application" class="text-white transition-colors hover:text-yellow-400">Membership Application</router-link></li>
-            <li><span class="text-white/50 cursor-not-allowed">GCX Certification Program</span></li>
+            <li><a href="https://apps.gcx.com.gh/onlineforms/" target="_blank" rel="noopener noreferrer" class="text-white transition-colors hover:text-yellow-400">GCX Certification Program</a></li>
             <li><router-link to="/resources" class="text-white transition-colors hover:text-yellow-400">GCX Resources</router-link></li>
             <li><router-link to="/membership/application" class="text-white transition-colors hover:text-yellow-400">Rules & Regulations</router-link></li>
           </ul>
