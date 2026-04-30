@@ -95,11 +95,11 @@ const { t } = useI18n()
               <div class="text-white">
                 <p class="font-medium text-white mb-1">Location</p>
                 <p class="text-sm leading-relaxed">
-                  2nd Floor - Africa Trade House,<br/>
-                  Ambassadorial Enclave Off Liberia Road<br/>
-                  Ridge, Accra<br/>
-                  Ghana - West Africa<br/>
-                  <span class="text-yellow-500 font-medium">Digital Address: GA-077-0681</span>
+                  Ministry of Finance Complex,<br>
+                  Tower 1, 5th Floor<br>
+                  Tumu Avenue, Kanda<br>
+                  Accra<br>
+                  <span class="text-yellow-500 font-medium">Digital Address: GV-002-6511</span>
                 </p>
               </div>
             </div>

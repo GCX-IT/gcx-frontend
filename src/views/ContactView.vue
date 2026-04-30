@@ -136,7 +136,7 @@ onMounted(() => {
     // Initialize map function
     window.initMap = () => {
       const map = new google.maps.Map(document.getElementById('map') as HTMLElement, {
-        center: { lat: 5.5600, lng: -0.2057 }, // Accra, Ghana coordinates
+        center: { lat: 5.5841, lng: -0.1935 }, // Kanda, Accra coordinates
         zoom: 15,
         styles: [
           {
@@ -234,7 +234,7 @@ onMounted(() => {
 
       // Add marker for GCX office
       new google.maps.Marker({
-        position: { lat: 5.5600, lng: -0.2057 },
+        position: { lat: 5.5841, lng: -0.1935 },
         map: map,
         title: 'Ghana Commodity Exchange',
         icon: {
@@ -256,7 +256,12 @@ onMounted(() => {
         content: `
           <div style="padding: 10px; max-width: 200px;">
             <h3 style="margin: 0 0 5px 0; color: #1e293b; font-weight: bold;">Ghana Commodity Exchange</h3>
-            <p style="margin: 0; color: #64748b; font-size: 14px;">2nd Floor - Africa Trade House<br>Ambassadorial Enclave Off Liberia Road<br>Ridge, Accra</p>
+            <p style="margin: 0; color: #64748b; font-size: 14px;">
+              Ministry of Finance Complex,<br>
+              Tower 1, 5th Floor<br>
+              Tumu Avenue, Kanda<br>
+              Accra
+            </p>
           </div>
         `
       })
@@ -294,7 +299,7 @@ const initLeafletMap = () => {
   script.crossOrigin = ''
   script.onload = () => {
     // Initialize map after Leaflet is loaded
-    const map = L.map('map').setView([5.5600, -0.2057], 15)
+    const map = L.map('map').setView([5.5841, -0.1935], 15)
 
     // Add tile layer (OpenStreetMap)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -327,19 +332,20 @@ const initLeafletMap = () => {
     })
 
     // Add marker
-    const marker = L.marker([5.5600, -0.2057], { icon: gcxIcon }).addTo(map)
+    const marker = L.marker([5.5841, -0.1935], { icon: gcxIcon }).addTo(map)
 
-    // Add popup
+    // Add popup<br>
+         
     marker.bindPopup(`
       <div style="padding: 10px; max-width: 200px;">
         <h3 style="margin: 0 0 5px 0; color: #1e293b; font-weight: bold;">Ghana Commodity Exchange</h3>
         <p style="margin: 0; color: #64748b; font-size: 14px;">
-          2nd Floor - Africa Trade House<br>
-          Ambassadorial Enclave Off Liberia Road<br>
-          Ridge, Accra
+          Ministry of Finance Complex, Tower 1, 5th Floor<br>
+          Tumu Avenue, Kanda<br>
+          Accra
         </p>
         <p style="margin: 5px 0 0 0; color: #f59e0b; font-size: 12px; font-weight: bold;">
-          Digital Address: GA-077-0681
+          Digital Address: GV-002-6511
         </p>
       </div>
     `)
@@ -517,13 +523,13 @@ const initLeafletMap = () => {
               <div>
                 <h3 class="font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-slate-900'">Office Address</h3>
                 <p class="leading-relaxed transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
-                  2nd Floor - Africa Trade House<br>
-                  Ambassadorial Enclave Off Liberia Road<br>
-                  Ridge, Accra<br>
-                  Ghana - West Africa
+                  Ministry of Finance Complex,<br>
+                  Tower 1, 5th Floor<br>
+                  Tumu Avenue, Kanda<br>
+                  Accra
                 </p>
                 <p class="text-sm mt-2 transition-colors duration-300" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
-                  Digital Address: GA-077-0681
+                  Digital Address: GV-002-6511
                 </p>
               </div>
             </div>
@@ -536,8 +542,8 @@ const initLeafletMap = () => {
               <div>
                 <h3 class="font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-slate-900'">Phone</h3>
                 <p class="transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
-                  <a href="tel:+233594164491" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
-                    +233 59 416 4491
+                  <a href="tel:+233594164464" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
+                    +233 59 416 4464
                   </a>
                 </p>
               </div>
@@ -569,8 +575,8 @@ const initLeafletMap = () => {
               <div>
                 <h3 class="font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-slate-900'">WhatsApp</h3>
                 <p class="transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
-                  <a href="https://wa.me/233594164491" target="_blank" rel="noopener noreferrer" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
-                    +233 59 416 4491
+                  <a href="https://wa.me/233594164464" target="_blank" rel="noopener noreferrer" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
+                    +233 59 416 4464
                   </a>
                 </p>
               </div>

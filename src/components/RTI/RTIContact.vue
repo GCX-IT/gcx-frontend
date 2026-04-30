@@ -83,9 +83,10 @@ import { isDarkMode } from '../../utils/darkMode'
                     Visit us in person for RTI applications
                   </p>
                   <p class="text-sm font-medium" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
-                    2nd Floor - Africa Trade House,<br>
-                    Ambassadorial Enclave Off Liberia Road<br>
-                    Ridge, Accra, Ghana
+                    Ministry of Finance Complex,<br>
+                    Tower 1, 5th Floor<br>
+                    Tumu Avenue, Kanda<br>
+                    Accra
                   </p>
                 </div>
               </div>

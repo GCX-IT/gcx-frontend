@@ -225,9 +225,9 @@ class EmailService {
             <div>
               <p style="margin: 0 0 5px 0; font-weight: bold; color: #475569; font-size: 14px;">Office Address</p>
               <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.4;">
-                2nd Floor - Africa Trade House<br>
-                Ambassadorial Enclave Off Liberia Road<br>
-                Ridge, Accra, Ghana
+                Ministry of Finance Complex, Tower 1<br>
+                5th Floor, Tumu Avenue, Kanda<br>
+                Accra, Ghana
               </p>
             </div>
             <div>
@@ -235,7 +235,7 @@ class EmailService {
               <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.4;">
                 Phone: +233 59 416 4465<br>
                 Email: info@gcx.com.gh<br>
-                Digital Address: GA-077-0681
+                Digital Address: GV-002-6511
               </p>
             </div>
           </div>
@@ -451,9 +451,9 @@ class EmailService {
             <div>
               <p style="margin: 0 0 5px 0; font-weight: bold; color: #475569; font-size: 14px;">Office Address</p>
               <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.4;">
-                2nd Floor - Africa Trade House<br>
-                Ambassadorial Enclave Off Liberia Road<br>
-                Ridge, Accra, Ghana
+                Ministry of Finance Complex, Tower 1<br>
+                5th Floor, Tumu Avenue, Kanda<br>
+                Accra, Ghana
               </p>
             </div>
             <div>
@@ -461,7 +461,7 @@ class EmailService {
               <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.4;">
                 Phone: +233 59 416 4465<br>
                 Email: info@gcx.com.gh<br>
-                Digital Address: GA-077-0681
+                Digital Address: GV-002-6511
               </p>
             </div>
           </div>
@@ -748,7 +748,7 @@ class EmailService {
               <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.4;">
                 Phone: +233 59 416 4465<br>
                 Email: info@gcx.com.gh<br>
-                Digital Address: GA-077-0681
+                Digital Address: GV-002-6511
               </p>
             </div>
           </div>

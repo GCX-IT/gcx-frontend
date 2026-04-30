@@ -293,9 +293,10 @@ import { isDarkMode } from '../../utils/darkMode'
           <h4 class="font-semibold mb-2" :class="isDarkMode ? 'text-white' : 'text-slate-900'">Head of Membership & Special Projects</h4>
           <div class="space-y-2 text-sm" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
             <p><strong>Ghana Commodity Exchange</strong></p>
-            <p>2nd Floor Africa Trade House (Next to British Council)</p>
-            <p>Cruickshank Road/ Liberia Road Ridge</p>
-            <p>Ridge – Accra</p>
+            <p>Ministry of Finance Complex,</p>
+            <p>Tower 1, 5th Floor</p>
+            <p>Tumu Avenue, Kanda</p>
+            <p>Accra</p>
           </div>
         </div>
         <div>
