@@ -575,8 +575,8 @@ const initLeafletMap = () => {
               <div>
                 <h3 class="font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-slate-900'">WhatsApp</h3>
                 <p class="transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
-                  <a href="https://wa.me/233594164464" target="_blank" rel="noopener noreferrer" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
-                    +233 59 416 4464
+                  <a href="https://wa.me/233594164491" target="_blank" rel="noopener noreferrer" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
+                    +233 59 416 4491
                   </a>
                 </p>
               </div>
