@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Keep admin/auth paths out of search results
+Disallow: /cms
+Disallow: /cms/
+Disallow: /login
+
+Sitemap: https://www.gcx.com.gh/sitemap.xml
