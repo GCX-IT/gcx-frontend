@@ -589,18 +589,18 @@ const initLeafletMap = () => {
               </div>
               <div>
                 <h3 class="font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-slate-900'">Business Hours</h3>
-                <div class="space-y-1 transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
-                  <div class="flex justify-between">
+                <div class="space-y-2 transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
+                  <div class="grid grid-cols-[1fr_auto] items-center gap-x-6">
                     <span>Monday - Friday</span>
-                    <span class="font-medium">8:00 AM - 5:00 PM</span>
+                    <span class="font-medium text-right">8:00 AM - 5:00 PM</span>
                   </div>
-                  <div class="flex justify-between">
+                  <div class="grid grid-cols-[1fr_auto] items-center gap-x-6">
                     <span>Saturday</span>
-                    <span class="font-medium">9:00 AM - 1:00 PM</span>
+                    <span class="font-medium text-right">Closed</span>
                   </div>
-                  <div class="flex justify-between">
+                  <div class="grid grid-cols-[1fr_auto] items-center gap-x-6">
                     <span>Sunday</span>
-                    <span class="font-medium transition-colors duration-300" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">Closed</span>
+                    <span class="font-medium text-right transition-colors duration-300" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">Closed</span>
                   </div>
                 </div>
               </div>
