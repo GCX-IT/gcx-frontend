@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { trackGaPageView } from '../plugins/gtag'
 import HomeView from '../views/HomeView.vue'
 import BlogView from '../views/BlogView.vue'
 import BlogPostView from '../views/BlogPostView.vue'
@@ -300,6 +301,12 @@ router.beforeEach(async (to, from, next) => {
     next('/login')
   } else {
     next()
+  }
+})
+
+router.afterEach((to) => {
+  if (import.meta.env.PROD) {
+    trackGaPageView(to.fullPath)
   }
 })
 

@@ -5,6 +5,7 @@ import './style.css'
 import 'primeicons/primeicons.css'
 // TinyMCE will be loaded from CDN via the Vue wrapper when API key is provided
 import App from './App.vue'
+import { initGoogleAnalytics } from './plugins/gtag'
 import './plugins/axios'
 import { useAuthStore } from './stores/auth'
 import i18n from './plugins/i18n'
@@ -47,5 +48,7 @@ useAuthStore()
 
 // Initialize market data system
 initializeMarketData().catch(console.error)
+
+initGoogleAnalytics()
 
 app.mount('#app')

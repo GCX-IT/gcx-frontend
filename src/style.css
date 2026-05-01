@@ -35,7 +35,7 @@
 
 @layer base {
   html {
-    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    font-family: "Segoe UI", "Segoe UI Variable", "Helvetica Neue", Arial, sans-serif;
     font-size: 16px; /* Ensure consistent base font size */
     -webkit-text-size-adjust: 100%; /* Prevent font scaling in landscape mode */
     text-size-adjust: 100%;
