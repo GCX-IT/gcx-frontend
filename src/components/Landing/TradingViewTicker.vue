@@ -274,6 +274,11 @@ const resumeScrolling = () => {
   isPaused.value = false
 }
 
+// Toggle scrolling on click
+const toggleScrolling = () => {
+  isPaused.value = !isPaused.value
+}
+
 // Get change color class
 const getChangeColor = (change: number) => {
   if (isDarkMode.value) {
@@ -346,8 +351,7 @@ onUnmounted(() => {
           { 'ticker-paused': isPaused, 'ticker-scroll-fullscreen': fullscreen },
           fullscreen ? 'space-x-8' : 'space-x-2'
         ]"
-        @mouseenter="pauseScrolling"
-        @mouseleave="resumeScrolling"
+        @click="toggleScrolling"
       >
         <!-- Commodities -->
         <div 
