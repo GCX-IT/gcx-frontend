@@ -27,6 +27,7 @@ import LoginView from '../views/LoginView.vue'
 import CMSView from '../views/CMSView.vue'
 import SearchView from '../views/SearchView.vue'
 import USSDRegisterView from '../views/USSDRegisterView.vue'
+import TickerView from '../views/TickerView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 
 const router = createRouter({
@@ -162,6 +163,11 @@ const router = createRouter({
       path: '/ussd-register',
       name: 'ussd-register',
       component: USSDRegisterView
+    },
+    {
+      path: '/ticker',
+      name: 'ticker',
+      component: TickerView
     },
     {
       path: '/cms',

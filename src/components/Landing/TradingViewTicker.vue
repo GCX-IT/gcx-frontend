@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useI18n } from '../../composables/useI18n'
-import { isDarkMode } from '../../utils/darkMode'
+import { isDarkMode, toggleDarkMode } from '../../utils/darkMode'
 import { useTickerVisibility } from '../../composables/useTickerVisibility'
 import { globalMarketData, globalLoading, globalError, refreshMarketData } from '../../utils/marketDataUtils'
 import { marketDataService, type ProcessedMarketData } from '../../services/marketDataService'
@@ -16,6 +16,33 @@ interface TickerCommodity {
   avatar: string
   color: string
   lastTradeDate: string
+}
+
+const props = withDefaults(defineProps<{ fullscreen?: boolean }>(), {
+  fullscreen: false
+})
+
+// Fullscreen state
+const isBrowserFullscreen = ref(false)
+
+const toggleFullscreen = async () => {
+  if (!document.fullscreenElement) {
+    try {
+      await document.documentElement.requestFullscreen()
+      isBrowserFullscreen.value = true
+    } catch (err) {
+      console.error(`Error attempting to enable fullscreen mode: ${err}`)
+    }
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen()
+      isBrowserFullscreen.value = false
+    }
+  }
+}
+
+const handleFullscreenChange = () => {
+  isBrowserFullscreen.value = !!document.fullscreenElement
 }
 
 // Real GCX commodity data with custom avatars
@@ -33,19 +60,38 @@ const commodityAvatars: Record<string, { avatar: string; color: string }> = {
   'Yellow Maize': { avatar: '🌽', color: 'bg-yellow-400' },
   'Yellow Soya Bean': { avatar: '🫘', color: 'bg-green-500' },
   'White Soya Bean': { avatar: '🫘', color: 'bg-green-400' },
-  'Aromatic Straight Millled Rice': { avatar: '🍚', color: 'bg-blue-500' },
-  'White Sesame Seed': { avatar: '⚪', color: 'bg-slate-400' },
-  'Sorghum': { avatar: '🌾', color: 'bg-amber-500' }
+  'Aromatic Straight Millled Rice': { avatar: 'rice', color: 'bg-blue-500' },
+  'White Sesame Seed': { avatar: 'sesame', color: 'bg-slate-400' },
+  'Sorghum': { avatar: 'sorghum', color: 'bg-amber-500' }
 }
 
 // Default avatar for unmapped commodities
 const getDefaultAvatar = (commodity: string): { avatar: string; color: string } => {
   if (commodity.toLowerCase().includes('maize')) return { avatar: '🌽', color: 'bg-yellow-500' }
   if (commodity.toLowerCase().includes('soya')) return { avatar: '🫘', color: 'bg-green-500' }
-  if (commodity.toLowerCase().includes('rice')) return { avatar: '🍚', color: 'bg-blue-500' }
-  if (commodity.toLowerCase().includes('sesame')) return { avatar: '⚪', color: 'bg-slate-400' }
-  if (commodity.toLowerCase().includes('sorghum')) return { avatar: '🌾', color: 'bg-amber-500' }
-  return { avatar: '📦', color: 'bg-gray-500' }
+  if (commodity.toLowerCase().includes('rice')) return { avatar: 'rice', color: 'bg-blue-500' }
+  if (commodity.toLowerCase().includes('sesame')) return { avatar: 'sesame', color: 'bg-slate-400' }
+  if (commodity.toLowerCase().includes('sorghum')) return { avatar: 'sorghum', color: 'bg-amber-500' }
+  return { avatar: 'commodity', color: 'bg-gray-500' }
+}
+
+const isEmojiAvatar = (avatar: string): boolean => avatar === '🌽' || avatar === '🫘'
+
+const getCommodityIconPath = (icon: string): string => {
+  switch (icon) {
+    case 'maize':
+      return 'M12 3C9.5 5.2 8 8.4 8 12c0 3.6 1.5 6.8 4 9 2.5-2.2 4-5.4 4-9 0-3.6-1.5-6.8-4-9z M12 6v12 M9.5 9.5L12 11l2.5-1.5 M9.5 13.5L12 15l2.5-1.5'
+    case 'soya':
+      return 'M7 13c0-3 2.2-5 5-5s5 2 5 5-2.2 5-5 5-5-2-5-5z M10 8c0-2 1-3.5 2-4.5 1 1 2 2.5 2 4.5'
+    case 'rice':
+      return 'M5 14c0 3 3 5 7 5s7-2 7-5H5z M7 14c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5'
+    case 'sesame':
+      return 'M12 6l2 3-2 3-2-3 2-3z M8 11l2 3-2 3-2-3 2-3z M16 11l2 3-2 3-2-3 2-3z'
+    case 'sorghum':
+      return 'M12 4v16 M12 8c-2 0-3-1-3-3 M12 10c2 0 3-1 3-3 M12 12c-2 0-3 1-3 3 M12 14c2 0 3 1 3 3'
+    default:
+      return 'M12 3l7 4-7 4-7-4 7-4z M5 7v8l7 4 7-4V7'
+  }
 }
 
 // Convert Firebase data to ticker format
@@ -173,11 +219,50 @@ const loadLatestTradedSymbols = async () => {
 
 // Manual refresh function
 const refreshData = async () => {
+  await refreshMarketData()
   await loadLatestTradedSymbols()
 }
 
 const isPaused = ref(false)
 const { isTickerVisible: isVisible } = useTickerVisibility()
+
+const tickerWrapperClasses = computed(() => {
+  if (props.fullscreen) {
+    return [
+      'relative',
+      'left-0',
+      'right-0',
+      'w-full',
+      'h-screen',
+      'overflow-hidden',
+      'z-[60]',
+      'transition-all',
+      'duration-500',
+      'ease-in-out',
+      'shadow-lg',
+      isDarkMode.value
+        ? 'bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950'
+        : 'bg-gradient-to-r from-slate-50 via-white to-slate-50'
+    ]
+  }
+
+  return [
+    'fixed',
+    'left-0',
+    'right-0',
+    'z-[60]',
+    'transition-all',
+    'duration-500',
+    'ease-in-out',
+    'shadow-lg',
+    isVisible.value ? 'top-0' : '-top-14',
+    isDarkMode.value
+      ? 'bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 border-b border-slate-700/50'
+      : 'bg-gradient-to-r from-white via-slate-50 to-white border-b border-slate-200/50'
+  ]
+})
+
+const tickerTrackHeightClass = computed(() => (props.fullscreen ? 'h-screen' : 'h-14 md:h-14'))
 
 // Pause scrolling on hover
 const pauseScrolling = () => {
@@ -221,36 +306,33 @@ const formatPrice = (price: number) => {
 // Lifecycle hooks
 onMounted(() => {
   loadLatestTradedSymbols()
+  document.addEventListener('fullscreenchange', handleFullscreenChange)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('fullscreenchange', handleFullscreenChange)
 })
 </script>
 
 <template>
-  <div 
-    class="fixed left-0 right-0 z-[60] transition-all duration-500 ease-in-out shadow-lg" 
-    :class="[
-      isVisible ? 'top-0' : '-top-14',
-      isDarkMode 
-        ? 'bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 border-b border-slate-700/50' 
-        : 'bg-gradient-to-r from-white via-slate-50 to-white border-b border-slate-200/50'
-    ]"
-  >
+  <div :class="tickerWrapperClasses">
     <!-- Custom Commodity Ticker -->
-    <div class="relative overflow-hidden h-14 md:h-14">
+    <div class="relative overflow-hidden flex items-center justify-center" :class="tickerTrackHeightClass">
       <!-- Loading State -->
-      <div v-if="isLoading" class="flex items-center h-full px-4">
-        <div class="flex items-center space-x-2">
-          <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-          <span class="text-xs" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
+      <div v-if="isLoading" class="flex items-center justify-center h-full px-4">
+        <div class="flex items-center space-x-4">
+          <div :class="[fullscreen ? 'w-8 h-8' : 'w-3 h-3']" class="bg-blue-500 rounded-full animate-pulse"></div>
+          <span :class="[[fullscreen ? 'text-2xl' : 'text-xs'], isDarkMode ? 'text-slate-300' : 'text-slate-600']">
             Loading market data...
           </span>
         </div>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="flex items-center h-full px-4">
-        <div class="flex items-center space-x-2">
-          <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-          <span class="text-xs" :class="isDarkMode ? 'text-red-300' : 'text-red-600'">
+      <div v-else-if="error" class="flex items-center justify-center h-full px-4">
+        <div class="flex items-center space-x-4">
+          <div :class="[fullscreen ? 'w-8 h-8' : 'w-3 h-3']" class="bg-red-500 rounded-full"></div>
+          <span :class="[[fullscreen ? 'text-2xl' : 'text-red-300'], isDarkMode ? 'text-red-300' : 'text-red-600']">
             {{ error }}
           </span>
         </div>
@@ -259,8 +341,11 @@ onMounted(() => {
       <!-- Ticker Container -->
       <div 
         v-else-if="commodities.length > 0"
-        class="flex items-center py-1.5 px-4 space-x-2 ticker-scroll h-full"
-        :class="{ 'ticker-paused': isPaused }"
+        class="flex items-center px-4 ticker-scroll h-full"
+        :class="[
+          { 'ticker-paused': isPaused, 'ticker-scroll-fullscreen': fullscreen },
+          fullscreen ? 'space-x-8' : 'space-x-2'
+        ]"
         @mouseenter="pauseScrolling"
         @mouseleave="resumeScrolling"
       >
@@ -268,39 +353,89 @@ onMounted(() => {
         <div 
           v-for="commodity in commodities" 
           :key="commodity.symbol"
-          class="flex items-center space-x-1 flex-shrink-0 group cursor-pointer transition-all duration-200 rounded-md px-2 py-0.5 border backdrop-blur-sm"
-          :class="isDarkMode 
-            ? 'hover:bg-slate-800/80 border-slate-700/50 bg-slate-900/50' 
-            : 'hover:bg-slate-50/80 border-slate-200/50 bg-white/50'"
+          class="flex flex-shrink-0 group cursor-pointer transition-all duration-200 backdrop-blur-md shadow-2xl"
+          :class="[
+            isDarkMode 
+              ? 'hover:bg-slate-800/90 border-slate-700/50 bg-slate-900/90' 
+              : 'hover:bg-slate-50/90 border-slate-200/50 bg-white/90',
+            fullscreen 
+              ? 'flex-col p-8 space-y-4 min-w-[350px] lg:min-w-[400px] xl:min-w-[20vw] items-center text-center rounded-[2.5rem] border-4 backdrop-blur-none shadow-lg' 
+              : 'flex-row px-2 py-0.5 space-x-1 min-w-[100px] items-center rounded-xl border'
+          ]"
         >
           <!-- Commodity Avatar -->
-          <div class="w-5 h-5 md:w-5 md:h-5 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md ring-1 ring-white/20" :class="commodity.color">
-            {{ commodity.avatar }}
+          <div 
+            class="rounded-full flex items-center justify-center text-white font-bold shadow-2xl ring-4 ring-white/20" 
+            :class="[
+              commodity.color,
+              fullscreen ? 'w-24 h-24 text-4xl mb-2' : 'w-5 h-5 md:w-5 md:h-5 text-xs'
+            ]"
+          >
+            <span v-if="isEmojiAvatar(commodity.avatar)">{{ commodity.avatar }}</span>
+            <svg v-else class="w-[70%] h-[70%]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                :d="getCommodityIconPath(commodity.avatar)"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
           </div>
           
           <!-- Commodity Info -->
-          <div class="flex flex-col min-w-[100px]">
-            <div class="flex items-center space-x-1 mb-0.5">
-              <span class="font-bold text-[10px] md:text-xs leading-tight" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
+          <div class="flex flex-col flex-1 w-full" :class="fullscreen ? 'items-center' : ''">
+            <div class="flex items-center mb-1 w-full" :class="[fullscreen ? 'flex-col mb-2 space-y-1' : 'justify-between mb-0.5']">
+              <span 
+                class="font-black leading-tight" 
+                :class="[
+                  isDarkMode ? 'text-white' : 'text-slate-900',
+                  fullscreen ? 'text-2xl lg:text-3xl' : 'text-[10px] md:text-xs'
+                ]"
+              >
                 {{ commodity.name }}
               </span>
-              <span class="text-[9px] font-mono hidden md:inline px-1 py-0.5 rounded bg-slate-200/50" :class="isDarkMode ? 'text-slate-300 bg-slate-800/50' : 'text-slate-600'">
+              <span 
+                class="font-mono px-3 py-1 rounded-xl shadow-inner" 
+                :class="[
+                  isDarkMode ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-100',
+                  fullscreen ? 'text-lg lg:text-xl' : 'text-[9px] hidden md:inline'
+                ]"
+              >
                 {{ commodity.symbol }}
               </span>
             </div>
-            <div class="flex items-center space-x-1.5">
-              <span class="font-bold text-xs md:text-sm" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
+            <div class="flex items-center w-full" :class="[fullscreen ? 'flex-col space-y-2' : 'justify-between']">
+              <span 
+                class="font-black" 
+                :class="[
+                  isDarkMode ? 'text-white' : 'text-slate-900',
+                  fullscreen ? 'text-4xl lg:text-6xl' : 'text-xs md:text-sm'
+                ]"
+              >
                 {{ formatPrice(commodity.price) }}
               </span>
-              <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5" :class="getChangeColor(commodity.change)">
+              <span 
+                class="font-bold rounded-full flex items-center justify-center shadow-lg" 
+                :class="[
+                  getChangeColor(commodity.change),
+                  fullscreen ? 'text-xl lg:text-2xl px-6 py-2 gap-3' : 'text-[10px] px-1.5 py-0.5 gap-0.5'
+                ]"
+              >
                 <span>{{ getChangeIcon(commodity.change) }}</span>
                 <span>{{ commodity.change > 0 ? '+' : '' }}{{ commodity.changePercent.toFixed(2) }}%</span>
               </span>
             </div>
-            <div v-if="commodity.lastTradeDate" class="text-[8px] mt-0.5 font-medium leading-tight whitespace-nowrap flex items-center gap-0.5" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
-              <span class="w-1 h-1 rounded-full animate-pulse" :class="isDarkMode ? 'bg-green-400' : 'bg-green-500'"></span>
-              <span class="text-[8px]">As at</span>
-              <span class="font-semibold text-[8px]">{{ commodity.lastTradeDate }}</span>
+            <div 
+              v-if="commodity.lastTradeDate" 
+              class="font-bold mt-1 leading-tight whitespace-nowrap flex items-center" 
+              :class="[
+                isDarkMode ? 'text-slate-400' : 'text-slate-500',
+                fullscreen ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5'
+              ]"
+            >
+              <span class="rounded-full animate-pulse" :class="[isDarkMode ? 'bg-green-400' : 'bg-green-500', fullscreen ? 'w-3 h-3' : 'w-1 h-1']"></span>
+              <span>As at {{ commodity.lastTradeDate }}</span>
             </div>
           </div>
         </div>
@@ -309,39 +444,89 @@ onMounted(() => {
         <div 
           v-for="commodity in commodities" 
           :key="`duplicate-${commodity.symbol}`"
-          class="flex items-center space-x-1.5 md:space-x-2 flex-shrink-0 group cursor-pointer transition-all duration-200 rounded-md px-2 py-1 border backdrop-blur-sm"
-          :class="isDarkMode 
-            ? 'hover:bg-slate-800/80 border-slate-700/50 bg-slate-900/50' 
-            : 'hover:bg-slate-50/80 border-slate-200/50 bg-white/50'"
+          class="flex flex-shrink-0 group cursor-pointer transition-all duration-200 backdrop-blur-md shadow-2xl"
+          :class="[
+            isDarkMode 
+              ? 'hover:bg-slate-800/90 border-slate-700/50 bg-slate-900/90' 
+              : 'hover:bg-slate-50/90 border-slate-200/50 bg-white/90',
+            fullscreen 
+              ? 'flex-col p-10 space-y-6 min-w-[350px] lg:min-w-[400px] xl:min-w-[20vw] items-center text-center rounded-[2.5rem] border-4 backdrop-blur-none shadow-lg' 
+              : 'flex-row px-2 py-1 space-x-1.5 md:space-x-2 items-center rounded-xl border'
+          ]"
         >
           <!-- Commodity Avatar -->
-          <div class="w-5 h-5 md:w-5 md:h-5 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md ring-1 ring-white/20" :class="commodity.color">
-            {{ commodity.avatar }}
+          <div 
+            class="rounded-full flex items-center justify-center text-white font-bold shadow-2xl ring-4 ring-white/20" 
+            :class="[
+              commodity.color,
+              fullscreen ? 'w-24 h-24 text-4xl mb-2' : 'w-5 h-5 md:w-5 md:h-5 text-xs'
+            ]"
+          >
+            <span v-if="isEmojiAvatar(commodity.avatar)">{{ commodity.avatar }}</span>
+            <svg v-else class="w-[70%] h-[70%]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                :d="getCommodityIconPath(commodity.avatar)"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
           </div>
           
           <!-- Commodity Info -->
-          <div class="flex flex-col min-w-[100px]">
-            <div class="flex items-center space-x-1 mb-0.5">
-              <span class="font-bold text-[10px] md:text-xs leading-tight" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
+          <div class="flex flex-col flex-1 w-full" :class="fullscreen ? 'items-center' : ''">
+            <div class="flex items-center mb-1 w-full" :class="[fullscreen ? 'flex-col mb-2 space-y-1' : 'justify-between mb-0.5']">
+              <span 
+                class="font-black leading-tight" 
+                :class="[
+                  isDarkMode ? 'text-white' : 'text-slate-900',
+                  fullscreen ? 'text-2xl lg:text-3xl' : 'text-[10px] md:text-xs'
+                ]"
+              >
                 {{ commodity.name }}
               </span>
-              <span class="text-[9px] font-mono hidden md:inline px-1 py-0.5 rounded bg-slate-200/50" :class="isDarkMode ? 'text-slate-300 bg-slate-800/50' : 'text-slate-600'">
+              <span 
+                class="font-mono px-3 py-1 rounded-xl shadow-inner" 
+                :class="[
+                  isDarkMode ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-100',
+                  fullscreen ? 'text-lg lg:text-xl' : 'text-[9px] hidden md:inline'
+                ]"
+              >
                 {{ commodity.symbol }}
               </span>
             </div>
-            <div class="flex items-center space-x-1.5">
-              <span class="font-bold text-xs md:text-sm" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
+            <div class="flex items-center w-full" :class="[fullscreen ? 'flex-col space-y-2' : 'justify-between']">
+              <span 
+                class="font-black" 
+                :class="[
+                  isDarkMode ? 'text-white' : 'text-slate-900',
+                  fullscreen ? 'text-4xl lg:text-6xl' : 'text-xs md:text-sm'
+                ]"
+              >
                 {{ formatPrice(commodity.price) }}
               </span>
-              <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5" :class="getChangeColor(commodity.change)">
+              <span 
+                class="font-bold rounded-full flex items-center justify-center shadow-lg" 
+                :class="[
+                  getChangeColor(commodity.change),
+                  fullscreen ? 'text-xl lg:text-2xl px-6 py-2 gap-3' : 'text-[10px] px-1.5 py-0.5 gap-0.5'
+                ]"
+              >
                 <span>{{ getChangeIcon(commodity.change) }}</span>
                 <span>{{ commodity.change > 0 ? '+' : '' }}{{ commodity.changePercent.toFixed(2) }}%</span>
               </span>
             </div>
-            <div v-if="commodity.lastTradeDate" class="text-[8px] mt-0.5 font-medium leading-tight whitespace-nowrap flex items-center gap-0.5" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
-              <span class="w-1 h-1 rounded-full animate-pulse" :class="isDarkMode ? 'bg-green-400' : 'bg-green-500'"></span>
-              <span class="text-[8px]">As at</span>
-              <span class="font-semibold text-[8px]">{{ commodity.lastTradeDate }}</span>
+            <div 
+              v-if="commodity.lastTradeDate" 
+              class="font-bold mt-1 leading-tight whitespace-nowrap flex items-center" 
+              :class="[
+                isDarkMode ? 'text-slate-400' : 'text-slate-500',
+                fullscreen ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5'
+              ]"
+            >
+              <span class="rounded-full animate-pulse" :class="[isDarkMode ? 'bg-green-400' : 'bg-green-500', fullscreen ? 'w-3 h-3' : 'w-1 h-1']"></span>
+              <span>As at {{ commodity.lastTradeDate }}</span>
             </div>
           </div>
         </div>
@@ -350,60 +535,143 @@ onMounted(() => {
         <div 
           v-for="commodity in commodities" 
           :key="`triplicate-${commodity.symbol}`"
-          class="flex items-center space-x-1.5 md:space-x-2 flex-shrink-0 group cursor-pointer transition-all duration-200 rounded-md px-2 py-1 border backdrop-blur-sm"
-          :class="isDarkMode 
-            ? 'hover:bg-slate-800/80 border-slate-700/50 bg-slate-900/50' 
-            : 'hover:bg-slate-50/80 border-slate-200/50 bg-white/50'"
+          class="flex flex-shrink-0 group cursor-pointer transition-all duration-200 backdrop-blur-md shadow-2xl"
+          :class="[
+            isDarkMode 
+              ? 'hover:bg-slate-800/90 border-slate-700/50 bg-slate-900/90' 
+              : 'hover:bg-slate-50/90 border-slate-200/50 bg-white/90',
+            fullscreen 
+              ? 'flex-col p-10 space-y-6 min-w-[350px] lg:min-w-[400px] xl:min-w-[20vw] items-center text-center rounded-[2.5rem] border-4 backdrop-blur-none shadow-lg' 
+              : 'flex-row px-2 py-1 space-x-1.5 md:space-x-2 items-center rounded-xl border'
+          ]"
         >
           <!-- Commodity Avatar -->
-          <div class="w-5 h-5 md:w-5 md:h-5 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md ring-1 ring-white/20" :class="commodity.color">
-            {{ commodity.avatar }}
+          <div 
+            class="rounded-full flex items-center justify-center text-white font-bold shadow-2xl ring-4 ring-white/20" 
+            :class="[
+              commodity.color,
+              fullscreen ? 'w-24 h-24 text-4xl mb-2' : 'w-5 h-5 md:w-5 md:h-5 text-xs'
+            ]"
+          >
+            <span v-if="isEmojiAvatar(commodity.avatar)">{{ commodity.avatar }}</span>
+            <svg v-else class="w-[70%] h-[70%]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                :d="getCommodityIconPath(commodity.avatar)"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
           </div>
           
           <!-- Commodity Info -->
-          <div class="flex flex-col min-w-[100px]">
-            <div class="flex items-center space-x-1 mb-0.5">
-              <span class="font-bold text-[10px] md:text-xs leading-tight" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
+          <div class="flex flex-col flex-1 w-full" :class="fullscreen ? 'items-center' : ''">
+            <div class="flex items-center mb-1 w-full" :class="[fullscreen ? 'flex-col mb-2 space-y-1' : 'justify-between mb-0.5']">
+              <span 
+                class="font-black leading-tight" 
+                :class="[
+                  isDarkMode ? 'text-white' : 'text-slate-900',
+                  fullscreen ? 'text-2xl lg:text-3xl' : 'text-[10px] md:text-xs'
+                ]"
+              >
                 {{ commodity.name }}
               </span>
-              <span class="text-[9px] font-mono hidden md:inline px-1 py-0.5 rounded bg-slate-200/50" :class="isDarkMode ? 'text-slate-300 bg-slate-800/50' : 'text-slate-600'">
+              <span 
+                class="font-mono px-3 py-1 rounded-xl shadow-inner" 
+                :class="[
+                  isDarkMode ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-100',
+                  fullscreen ? 'text-lg lg:text-xl' : 'text-[9px] hidden md:inline'
+                ]"
+              >
                 {{ commodity.symbol }}
               </span>
             </div>
-            <div class="flex items-center space-x-1.5">
-              <span class="font-bold text-xs md:text-sm" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
+            <div class="flex items-center w-full" :class="[fullscreen ? 'flex-col space-y-2' : 'justify-between']">
+              <span 
+                class="font-black" 
+                :class="[
+                  isDarkMode ? 'text-white' : 'text-slate-900',
+                  fullscreen ? 'text-4xl lg:text-6xl' : 'text-xs md:text-sm'
+                ]"
+              >
                 {{ formatPrice(commodity.price) }}
               </span>
-              <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-0.5" :class="getChangeColor(commodity.change)">
+              <span 
+                class="font-bold rounded-full flex items-center justify-center shadow-lg" 
+                :class="[
+                  getChangeColor(commodity.change),
+                  fullscreen ? 'text-2xl lg:text-3xl px-6 py-2 gap-3' : 'text-[10px] px-1.5 py-0.5 gap-0.5'
+                ]"
+              >
                 <span>{{ getChangeIcon(commodity.change) }}</span>
                 <span>{{ commodity.change > 0 ? '+' : '' }}{{ commodity.changePercent.toFixed(2) }}%</span>
               </span>
             </div>
-            <div v-if="commodity.lastTradeDate" class="text-[8px] mt-0.5 font-medium leading-tight whitespace-nowrap flex items-center gap-0.5" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
-              <span class="w-1 h-1 rounded-full animate-pulse" :class="isDarkMode ? 'bg-green-400' : 'bg-green-500'"></span>
-              <span class="text-[8px]">As at</span>
-              <span class="font-semibold text-[8px]">{{ commodity.lastTradeDate }}</span>
+            <div 
+              v-if="commodity.lastTradeDate" 
+              class="font-bold mt-1 leading-tight whitespace-nowrap flex items-center" 
+              :class="[
+                isDarkMode ? 'text-slate-400' : 'text-slate-500',
+                fullscreen ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5'
+              ]"
+            >
+              <span class="rounded-full animate-pulse" :class="[isDarkMode ? 'bg-green-400' : 'bg-green-500', fullscreen ? 'w-3 h-3' : 'w-1 h-1']"></span>
+              <span>As at {{ commodity.lastTradeDate }}</span>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Refresh Button -->
-      <div class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10">
+      <div v-if="!isBrowserFullscreen" class="absolute right-6 top-1/2 transform -translate-y-1/2 z-20 flex flex-col space-y-4">
+        <!-- Fullscreen Toggle -->
+        <button 
+          v-if="fullscreen"
+          @click="toggleFullscreen"
+          class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-2xl hover:scale-110 active:scale-95"
+          :class="isDarkMode ? 'bg-slate-800 text-white border border-slate-700' : 'bg-white text-slate-900 border border-slate-200'"
+          title="Toggle Fullscreen"
+        >
+          <svg v-if="!isBrowserFullscreen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+          </svg>
+          <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button 
+          v-if="fullscreen"
+          @click="toggleDarkMode"
+          class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-2xl hover:scale-110 active:scale-95"
+          :class="isDarkMode ? 'bg-yellow-500 text-slate-900' : 'bg-slate-900 text-yellow-500'"
+          title="Toggle Theme"
+        >
+          <svg v-if="isDarkMode" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707-.707M12 5a7 7 0 100 14 7 7 0 000-14z" />
+          </svg>
+          <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+
+        <!-- Refresh Button -->
         <button 
           @click="refreshData"
           :disabled="isLoading"
-          class="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 hover:scale-110"
+          class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-2xl disabled:opacity-50 hover:scale-110 active:scale-95"
           :class="isLoading 
             ? 'bg-blue-500 animate-pulse' 
             : (isDarkMode 
-              ? 'bg-green-600 hover:bg-green-500' 
-              : 'bg-green-500 hover:bg-green-600')"
+              ? 'bg-green-600 hover:bg-green-500 text-white' 
+              : 'bg-green-500 hover:bg-green-600 text-white')"
           :title="isLoading ? 'Refreshing...' : 'Refresh data'"
         >
           <svg 
             v-if="!isLoading"
-            class="w-3 h-3 text-white" 
+            class="w-6 h-6" 
             fill="none" 
             stroke="currentColor" 
             stroke-width="2.5"
@@ -411,7 +679,7 @@ onMounted(() => {
           >
             <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"></path>
           </svg>
-          <div v-else class="w-2.5 h-2.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <div v-else class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
         </button>
       </div>
     </div>
@@ -422,16 +690,23 @@ onMounted(() => {
 /* Ticker scrolling animation */
 @keyframes ticker-scroll {
   0% {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translateX(-33.33%);
+    transform: translate3d(-33.3333%, 0, 0);
   }
 }
 
 .ticker-scroll {
   animation: ticker-scroll 180s linear infinite;
   width: max-content;
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000;
+}
+
+.ticker-scroll-fullscreen {
+  animation: ticker-scroll 135s linear infinite;
 }
 
 /* Smooth hover effects */

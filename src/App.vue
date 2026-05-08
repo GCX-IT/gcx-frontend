@@ -14,7 +14,7 @@ const isLoading = ref(true)
 
 // Hide navbar and ticker for CMS and auth pages
 const hideNavbar = computed(() => {
-  const hideOnRoutes = ['/login', '/cms']
+  const hideOnRoutes = ['/login', '/cms', '/ticker']
   const hideOnRoutePrefixes = ['/cms/']
   
   // Check exact routes
@@ -32,7 +32,7 @@ const hideNavbar = computed(() => {
 
 // Hide ticker for CMS, auth pages, and other protected routes
 const hideTicker = computed(() => {
-  const hideOnRoutes = ['/login', '/cms']
+  const hideOnRoutes = ['/login', '/cms', '/ticker']
   const hideOnRoutePrefixes = ['/admin', '/dashboard', '/api', '/cms']
   
   // Check exact routes
@@ -47,6 +47,8 @@ const hideTicker = computed(() => {
   
   return false
 })
+
+const hideScrollToTop = computed(() => route.path === '/ticker')
 
 onMounted(() => {
   initializeDarkMode()
@@ -81,7 +83,7 @@ onMounted(() => {
           </Transition>
         </RouterView>
       </main>
-      <ScrollToTopButton />
+      <ScrollToTopButton v-if="!hideScrollToTop" />
     </div>
   </div>
 </template>
