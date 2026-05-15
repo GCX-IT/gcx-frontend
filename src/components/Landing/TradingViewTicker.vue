@@ -690,14 +690,16 @@ onUnmounted(() => {
 .ultra-wide-scaler {
   width: 600vw;
   height: 100vh;
-  transform: scaleX(0.16667);
+  transform: scaleX(0.16667) translateZ(0);
   transform-origin: left center;
   display: flex;
   align-items: center;
+  will-change: transform;
 }
 
 .ultra-wide-track {
-  animation: ticker-scroll 240s linear infinite !important; /* Slowed down significantly */
+  animation: ticker-scroll 360s linear infinite !important;
+  will-change: transform;
 }
 
 .ultra-wide-item {
@@ -710,10 +712,12 @@ onUnmounted(() => {
   box-shadow: none !important;
   backdrop-filter: none !important;
   flex-direction: row !important; /* Force horizontal for ultra-wide */
-  space-x: 36px !important; /* 6px * 6 */
+  column-gap: 192px !important; /* 32px * 6 */
   font-family: 'JetBrains Mono', monospace !important; /* Sharper font */
   text-rendering: optimizeLegibility !important;
-  -webkit-font-smoothing: antialiased !important;
+  -webkit-font-smoothing: subpixel-antialiased !important;
+  transform: translate3d(0, 0, 0);
+  text-shadow: 0 0 1px rgba(255,255,255,0.1); /* Soft-edge softening */
 }
 
 .ultra-wide-avatar {
@@ -765,6 +769,10 @@ onUnmounted(() => {
 .ultra-wide-buttons button {
   width: 144px !important; /* 24px * 6 */
   height: 144px !important; /* 24px * 6 */
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 6px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: none !important;
 }
 
 .ultra-wide-buttons svg {
