@@ -18,8 +18,12 @@ interface TickerCommodity {
   lastTradeDate: string
 }
 
-const props = withDefaults(defineProps<{ fullscreen?: boolean }>(), {
-  fullscreen: false
+const props = withDefaults(defineProps<{ 
+  fullscreen?: boolean,
+  ultraWide?: boolean
+}>(), {
+  fullscreen: false,
+  ultraWide: false
 })
 
 // Fullscreen state
@@ -96,13 +100,8 @@ const getCommodityIconPath = (icon: string): string => {
 
 // Convert Firebase data to ticker format
 const convertToTickerFormat = (data: ProcessedMarketData[]): TickerCommodity[] => {
-  // Show all commodities in the ticker, not just the top 10
-  // This ensures we see a variety of all available commodities
-  
   return data.map(item => {
     const avatarInfo = commodityAvatars[item.Commodity] || getDefaultAvatar(item.Commodity)
-    
-    // Format the latest trade date for this commodity
     const formattedDate = formatTradeDate(item.latestDate || item.LastTradeDate)
     
     return {
@@ -119,7 +118,6 @@ const convertToTickerFormat = (data: ProcessedMarketData[]): TickerCommodity[] =
   })
 }
 
-// Format volume (simplified since Firebase doesn't provide volume data)
 const formatVolume = (symbol: string): string => {
   const baseVolumes: Record<string, string> = {
     'GAPWM2': '2.4M MT',
@@ -131,71 +129,26 @@ const formatVolume = (symbol: string): string => {
     'GTAYSB2': '1.5M MT',
     'GWAYSB2': '1.1M MT'
   }
-  
   return baseVolumes[symbol] || '500K MT'
 }
 
-// Helper function to parse dates more robustly
 const parseDate = (dateString: string): Date | null => {
   if (!dateString || dateString.trim() === '') return null
-  
-  // Try parsing as ISO string first
   let date = new Date(dateString)
-  if (!isNaN(date.getTime())) {
-    return date
-  }
-  
-  // Try different formats
+  if (!isNaN(date.getTime())) return date
   const dateStr = String(dateString).trim()
-  
-  // Try YYYY-MM-DD format
   if (dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
     date = new Date(dateStr)
     if (!isNaN(date.getTime())) return date
   }
-  
-  // Try DD/MM/YYYY or MM/DD/YYYY
-  if (dateStr.match(/^\d{1,2}\/\d{1,2}\/\d{4}/)) {
-    const parts = dateStr.split('/')
-    if (parts.length === 3) {
-      // Try MM/DD/YYYY first
-      date = new Date(`${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`)
-      if (!isNaN(date.getTime())) return date
-      // Try DD/MM/YYYY
-      date = new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`)
-      if (!isNaN(date.getTime())) return date
-    }
-  }
-  
-  // Try DD-MM-YYYY or MM-DD-YYYY
-  if (dateStr.match(/^\d{1,2}-\d{1,2}-\d{4}/)) {
-    const parts = dateStr.split('-')
-    if (parts.length === 3) {
-      // Try MM-DD-YYYY first
-      date = new Date(`${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`)
-      if (!isNaN(date.getTime())) return date
-      // Try DD-MM-YYYY
-      date = new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`)
-      if (!isNaN(date.getTime())) return date
-    }
-  }
-  
   return null
 }
 
-// Format a single trade date
 const formatTradeDate = (dateString: string): string => {
   try {
-    if (!dateString || dateString.trim() === '') {
-      return ''
-    }
-    
+    if (!dateString || dateString.trim() === '') return ''
     const date = parseDate(dateString)
-    if (!date) {
-      return ''
-    }
-    
-    // Format as "DD MMM YYYY"
+    if (!date) return ''
     return date.toLocaleDateString('en-GH', {
       day: 'numeric',
       month: 'short',
@@ -206,10 +159,8 @@ const formatTradeDate = (dateString: string): string => {
   }
 }
 
-// Load all latest traded symbols from PHP endpoint
 const loadLatestTradedSymbols = async () => {
   try {
-    // Get all symbols sorted by latest trade date (no limit)
     const latestData = await marketDataService.getCurrentMarketData()
     commodities.value = convertToTickerFormat(latestData)
   } catch (error) {
@@ -217,7 +168,6 @@ const loadLatestTradedSymbols = async () => {
   }
 }
 
-// Manual refresh function
 const refreshData = async () => {
   await refreshMarketData()
   await loadLatestTradedSymbols()
@@ -227,7 +177,7 @@ const isPaused = ref(false)
 const { isTickerVisible: isVisible } = useTickerVisibility()
 
 const tickerWrapperClasses = computed(() => {
-  if (props.fullscreen) {
+  if (props.fullscreen || props.ultraWide) {
     return [
       'relative',
       'left-0',
@@ -240,7 +190,7 @@ const tickerWrapperClasses = computed(() => {
       'duration-500',
       'ease-in-out',
       'shadow-lg',
-      isDarkMode.value
+      (isDarkMode.value || props.ultraWide)
         ? 'bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950'
         : 'bg-gradient-to-r from-slate-50 via-white to-slate-50'
     ]
@@ -262,25 +212,19 @@ const tickerWrapperClasses = computed(() => {
   ]
 })
 
-const tickerTrackHeightClass = computed(() => (props.fullscreen ? 'h-screen' : 'h-16 md:h-16'))
+const tickerTrackHeightClass = computed(() => (props.fullscreen || props.ultraWide ? 'h-screen' : 'h-16 md:h-16'))
 
-// Pause scrolling on hover
-const pauseScrolling = () => {
-  isPaused.value = true
-}
-
-// Resume scrolling
-const resumeScrolling = () => {
-  isPaused.value = false
-}
-
-// Toggle scrolling on click
 const toggleScrolling = () => {
   isPaused.value = !isPaused.value
 }
 
-// Get change color class
 const getChangeColor = (change: number) => {
+  if (props.ultraWide) {
+    if (change > 0) return 'text-[#00ff88]' // Matrix Green
+    if (change < 0) return 'text-[#ff4466]' // Bright Red
+    return 'text-[#ffaa00]' // GCX Gold
+  }
+
   if (isDarkMode.value) {
     if (change > 0) return 'text-green-400 bg-green-900/30'
     if (change < 0) return 'text-red-400 bg-red-900/30'
@@ -292,14 +236,12 @@ const getChangeColor = (change: number) => {
   }
 }
 
-// Get change icon
 const getChangeIcon = (change: number) => {
   if (change > 0) return '↗'
   if (change < 0) return '↘'
   return '→'
 }
 
-// Format price
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-GH', {
     style: 'currency',
@@ -308,7 +250,6 @@ const formatPrice = (price: number) => {
   }).format(price)
 }
 
-// Lifecycle hooks
 onMounted(() => {
   loadLatestTradedSymbols()
   document.addEventListener('fullscreenchange', handleFullscreenChange)
@@ -322,306 +263,332 @@ onUnmounted(() => {
 <template>
   <div :class="tickerWrapperClasses">
     <!-- Custom Commodity Ticker -->
-    <div class="relative overflow-hidden flex items-center justify-center" :class="tickerTrackHeightClass">
-      <!-- Loading State -->
-      <div v-if="isLoading" class="flex items-center justify-center h-full px-4">
-        <div class="flex items-center space-x-4">
-          <div :class="[fullscreen ? 'w-8 h-8' : 'w-3 h-3']" class="bg-blue-500 rounded-full animate-pulse"></div>
-          <span :class="[[fullscreen ? 'text-2xl' : 'text-xs'], isDarkMode ? 'text-slate-300' : 'text-slate-600']">
-            Loading market data...
-          </span>
+    <div class="relative overflow-hidden flex items-center justify-center" :class="[tickerTrackHeightClass, { 'ultra-wide-viewport': ultraWide }]">
+      <div :class="{ 'ultra-wide-scaler': ultraWide }">
+        <!-- Loading State -->
+        <div v-if="isLoading" class="flex items-center justify-center h-full px-4">
+          <div class="flex items-center space-x-4">
+            <div :class="[fullscreen ? 'w-8 h-8' : 'w-3 h-3']" class="bg-blue-500 rounded-full animate-pulse"></div>
+            <span :class="[[fullscreen ? 'text-2xl' : 'text-xs'], (isDarkMode || ultraWide) ? 'text-slate-300' : 'text-slate-600']">
+              Loading market data...
+            </span>
+          </div>
         </div>
-      </div>
 
-      <!-- Error State -->
-      <div v-else-if="error" class="flex items-center justify-center h-full px-4">
-        <div class="flex items-center space-x-4">
-          <div :class="[fullscreen ? 'w-8 h-8' : 'w-3 h-3']" class="bg-red-500 rounded-full"></div>
-          <span :class="[[fullscreen ? 'text-2xl' : 'text-red-300'], isDarkMode ? 'text-red-300' : 'text-red-600']">
-            {{ error }}
-          </span>
+        <!-- Error State -->
+        <div v-else-if="error" class="flex items-center justify-center h-full px-4">
+          <div class="flex items-center space-x-4">
+            <div :class="[fullscreen ? 'w-8 h-8' : 'w-3 h-3']" class="bg-red-500 rounded-full"></div>
+            <span :class="[[fullscreen ? 'text-2xl' : 'text-red-300'], (isDarkMode || ultraWide) ? 'text-red-300' : 'text-red-600']">
+              {{ error }}
+            </span>
+          </div>
         </div>
-      </div>
 
-      <!-- Ticker Container -->
-      <div 
-        v-else-if="commodities.length > 0"
-        class="flex items-center px-4 ticker-scroll h-full"
-        :class="[
-          { 'ticker-paused': isPaused, 'ticker-scroll-fullscreen': fullscreen },
-          fullscreen ? 'space-x-8' : 'space-x-2'
-        ]"
-        @click="toggleScrolling"
-      >
-        <!-- Commodities -->
+        <!-- Ticker Container -->
         <div 
-          v-for="commodity in commodities" 
-          :key="commodity.symbol"
-          class="flex flex-shrink-0 group cursor-pointer transition-all duration-200 backdrop-blur-md shadow-2xl"
+          v-else-if="commodities.length > 0"
+          class="flex items-center px-4 ticker-scroll h-full"
           :class="[
-            isDarkMode 
-              ? 'hover:bg-slate-800/90 border-slate-700/50 bg-slate-900/90' 
-              : 'hover:bg-slate-50/90 border-slate-200/50 bg-white/90',
-            fullscreen 
-              ? 'flex-col p-8 space-y-4 min-w-[350px] lg:min-w-[400px] xl:min-w-[20vw] items-center text-center rounded-[2.5rem] border-4 backdrop-blur-none shadow-lg' 
-              : 'flex-row px-2 py-2.5 space-x-1 min-w-[100px] items-center rounded-xl border'
+            { 'ticker-paused': isPaused, 'ticker-scroll-fullscreen': (fullscreen || ultraWide) && !ultraWide, 'ultra-wide-track': ultraWide },
+            (fullscreen || ultraWide) ? 'space-x-8' : 'space-x-2'
           ]"
+          @click="toggleScrolling"
         >
-          <!-- Commodity Avatar -->
+          <!-- Set 1 -->
           <div 
-            class="rounded-full flex items-center justify-center text-white font-bold shadow-2xl ring-4 ring-white/20" 
+            v-for="commodity in commodities" 
+            :key="commodity.symbol"
+            class="flex flex-shrink-0 group cursor-pointer transition-all duration-200"
             :class="[
-              commodity.color,
-              fullscreen ? 'w-24 h-24 text-4xl mb-2' : 'w-5 h-5 md:w-5 md:h-5 text-xs'
+              !ultraWide ? 'backdrop-blur-md shadow-2xl' : '',
+              (isDarkMode || ultraWide) 
+                ? (ultraWide ? '' : 'hover:bg-slate-800/90 border-slate-700/50 bg-slate-900/90') 
+                : (ultraWide ? '' : 'hover:bg-slate-50/90 border-slate-200/50 bg-white/90'),
+              (fullscreen || ultraWide) 
+                ? 'flex-col p-8 space-y-4 min-w-[350px] lg:min-w-[400px] xl:min-w-[20vw] items-center text-center rounded-[2.5rem] border-4 backdrop-blur-none shadow-lg' 
+                : 'flex-row px-2 py-2.5 space-x-1 min-w-[100px] items-center rounded-xl border',
+              { 'ultra-wide-item': ultraWide }
             ]"
           >
-            <span v-if="isEmojiAvatar(commodity.avatar)">{{ commodity.avatar }}</span>
-            <svg v-else class="w-[70%] h-[70%]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                :d="getCommodityIconPath(commodity.avatar)"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
-          
-          <!-- Commodity Info -->
-          <div class="flex flex-col flex-1 w-full" :class="fullscreen ? 'items-center' : ''">
-            <div class="flex items-center mb-1 w-full" :class="[fullscreen ? 'flex-col mb-2 space-y-1' : 'justify-between mb-0.5']">
-              <span 
-                class="font-black leading-tight" 
-                :class="[
-                  isDarkMode ? 'text-white' : 'text-slate-900',
-                  fullscreen ? 'text-2xl lg:text-3xl' : 'text-[10px] md:text-xs'
-                ]"
-              >
-                {{ commodity.name }}
-              </span>
-              <span 
-                class="font-mono px-3 py-1 rounded-xl shadow-inner" 
-                :class="[
-                  isDarkMode ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-100',
-                  fullscreen ? 'text-lg lg:text-xl' : 'text-[9px] hidden md:inline'
-                ]"
-              >
-                {{ commodity.symbol }}
-              </span>
-            </div>
-            <div class="flex items-center w-full" :class="[fullscreen ? 'flex-col space-y-2' : 'justify-between']">
-              <span 
-                class="font-black" 
-                :class="[
-                  isDarkMode ? 'text-white' : 'text-slate-900',
-                  fullscreen ? 'text-4xl lg:text-6xl' : 'text-xs md:text-sm'
-                ]"
-              >
-                {{ formatPrice(commodity.price) }}
-              </span>
-              <span 
-                class="font-bold rounded-full flex items-center justify-center shadow-lg" 
-                :class="[
-                  getChangeColor(commodity.change),
-                  fullscreen ? 'text-xl lg:text-2xl px-6 py-2 gap-3' : 'text-[10px] px-1.5 py-0.5 gap-0.5'
-                ]"
-              >
-                <span>{{ getChangeIcon(commodity.change) }}</span>
-                <span>{{ commodity.change > 0 ? '+' : '' }}{{ commodity.changePercent.toFixed(2) }}%</span>
-              </span>
-            </div>
+            <!-- Commodity Avatar -->
             <div 
-              v-if="commodity.lastTradeDate" 
-              class="font-bold mt-1 leading-tight whitespace-nowrap flex items-center" 
+              class="rounded-full flex items-center justify-center text-white font-bold shadow-2xl ring-4 ring-white/20" 
               :class="[
-                isDarkMode ? 'text-slate-400' : 'text-slate-500',
-                fullscreen ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5 mb-0.5'
+                commodity.color,
+                (fullscreen || ultraWide) ? 'w-24 h-24 text-4xl mb-2' : 'w-5 h-5 md:w-5 md:h-5 text-xs',
+                { 'ultra-wide-avatar': ultraWide }
               ]"
             >
-              <span class="rounded-full animate-pulse" :class="[isDarkMode ? 'bg-green-400' : 'bg-green-500', fullscreen ? 'w-3 h-3' : 'w-1 h-1']"></span>
-              <span>As at {{ commodity.lastTradeDate }}</span>
+              <span v-if="isEmojiAvatar(commodity.avatar)">{{ commodity.avatar }}</span>
+              <svg v-else class="w-[70%] h-[70%]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  :d="getCommodityIconPath(commodity.avatar)"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            
+            <!-- Commodity Info -->
+            <div class="flex flex-col flex-1 w-full" :class="(fullscreen || ultraWide) ? 'items-center' : ''">
+              <div class="flex items-center mb-1 w-full" :class="[(fullscreen || ultraWide) ? 'flex-col mb-2 space-y-1' : 'justify-between mb-0.5']">
+                <span 
+                  class="font-black leading-tight" 
+                  :class="[
+                    (isDarkMode || ultraWide) ? 'text-white' : 'text-slate-900',
+                    (fullscreen || ultraWide) ? 'text-2xl lg:text-3xl' : 'text-[10px] md:text-xs',
+                    { 'ultra-wide-text-large': ultraWide }
+                  ]"
+                >
+                  {{ commodity.name }}
+                </span>
+                <span 
+                  class="font-mono px-3 py-1 rounded-xl shadow-inner" 
+                  :class="[
+                    (isDarkMode || ultraWide) ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-100',
+                    (fullscreen || ultraWide) ? 'text-lg lg:text-xl' : 'text-[9px] hidden md:inline',
+                    { 'ultra-wide-text-mono': ultraWide }
+                  ]"
+                >
+                  {{ commodity.symbol }}
+                </span>
+              </div>
+              <div class="flex items-center w-full" :class="[(fullscreen || ultraWide) ? 'flex-col space-y-2' : 'justify-between']">
+                <span 
+                  class="font-black" 
+                  :class="[
+                    (isDarkMode || ultraWide) ? (ultraWide ? 'text-[#00ff88]' : 'text-white') : 'text-slate-900',
+                    (fullscreen || ultraWide) ? 'text-4xl lg:text-6xl' : 'text-xs md:text-sm',
+                    { 'ultra-wide-text-xl': ultraWide }
+                  ]"
+                >
+                  {{ formatPrice(commodity.price) }}
+                </span>
+                <span 
+                  class="font-bold rounded-full flex items-center justify-center shadow-lg" 
+                  :class="[
+                    getChangeColor(commodity.change),
+                    (fullscreen || ultraWide) ? 'text-xl lg:text-2xl px-6 py-2 gap-3' : 'text-[10px] px-1.5 py-0.5 gap-0.5',
+                    { 'ultra-wide-change': ultraWide }
+                  ]"
+                >
+                  <span>{{ getChangeIcon(commodity.change) }}</span>
+                  <span>{{ commodity.change > 0 ? '+' : '' }}{{ commodity.changePercent.toFixed(2) }}%</span>
+                </span>
+              </div>
+              <div 
+                v-if="commodity.lastTradeDate" 
+                class="font-bold mt-1 leading-tight whitespace-nowrap flex items-center" 
+                :class="[
+                  (isDarkMode || ultraWide) ? (ultraWide ? 'text-[#aaffee]' : 'text-slate-400') : 'text-slate-500',
+                  (fullscreen || ultraWide) ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5 mb-0.5',
+                  { 'ultra-wide-text-date': ultraWide }
+                ]"
+              >
+                <span class="rounded-full animate-pulse" :class="[(isDarkMode || ultraWide) ? 'bg-green-400' : 'bg-green-500', (fullscreen || ultraWide) ? 'w-3 h-3' : 'w-1 h-1']"></span>
+                <span>As at {{ commodity.lastTradeDate }}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Duplicate set for seamless loop -->
-        <div 
-          v-for="commodity in commodities" 
-          :key="`duplicate-${commodity.symbol}`"
-          class="flex flex-shrink-0 group cursor-pointer transition-all duration-200 backdrop-blur-md shadow-2xl"
-          :class="[
-            isDarkMode 
-              ? 'hover:bg-slate-800/90 border-slate-700/50 bg-slate-900/90' 
-              : 'hover:bg-slate-50/90 border-slate-200/50 bg-white/90',
-            fullscreen 
-              ? 'flex-col p-10 space-y-6 min-w-[350px] lg:min-w-[400px] xl:min-w-[20vw] items-center text-center rounded-[2.5rem] border-4 backdrop-blur-none shadow-lg' 
-              : 'flex-row px-2 py-2.5 space-x-1.5 md:space-x-2 items-center rounded-xl border'
-          ]"
-        >
-          <!-- Commodity Avatar -->
+          <!-- Set 2 -->
           <div 
-            class="rounded-full flex items-center justify-center text-white font-bold shadow-2xl ring-4 ring-white/20" 
+            v-for="commodity in commodities" 
+            :key="`duplicate-${commodity.symbol}`"
+            class="flex flex-shrink-0 group cursor-pointer transition-all duration-200"
             :class="[
-              commodity.color,
-              fullscreen ? 'w-24 h-24 text-4xl mb-2' : 'w-5 h-5 md:w-5 md:h-5 text-xs'
+              !ultraWide ? 'backdrop-blur-md shadow-2xl' : '',
+              (isDarkMode || ultraWide) 
+                ? (ultraWide ? '' : 'hover:bg-slate-800/90 border-slate-700/50 bg-slate-900/90') 
+                : (ultraWide ? '' : 'hover:bg-slate-50/90 border-slate-200/50 bg-white/90'),
+              (fullscreen || ultraWide) 
+                ? 'flex-col p-8 space-y-4 min-w-[350px] lg:min-w-[400px] xl:min-w-[20vw] items-center text-center rounded-[2.5rem] border-4 backdrop-blur-none shadow-lg' 
+                : 'flex-row px-2 py-2.5 space-x-1 min-w-[100px] items-center rounded-xl border',
+              { 'ultra-wide-item': ultraWide }
             ]"
           >
-            <span v-if="isEmojiAvatar(commodity.avatar)">{{ commodity.avatar }}</span>
-            <svg v-else class="w-[70%] h-[70%]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                :d="getCommodityIconPath(commodity.avatar)"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
-          
-          <!-- Commodity Info -->
-          <div class="flex flex-col flex-1 w-full" :class="fullscreen ? 'items-center' : ''">
-            <div class="flex items-center mb-1 w-full" :class="[fullscreen ? 'flex-col mb-2 space-y-1' : 'justify-between mb-0.5']">
-              <span 
-                class="font-black leading-tight" 
-                :class="[
-                  isDarkMode ? 'text-white' : 'text-slate-900',
-                  fullscreen ? 'text-2xl lg:text-3xl' : 'text-[10px] md:text-xs'
-                ]"
-              >
-                {{ commodity.name }}
-              </span>
-              <span 
-                class="font-mono px-3 py-1 rounded-xl shadow-inner" 
-                :class="[
-                  isDarkMode ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-100',
-                  fullscreen ? 'text-lg lg:text-xl' : 'text-[9px] hidden md:inline'
-                ]"
-              >
-                {{ commodity.symbol }}
-              </span>
-            </div>
-            <div class="flex items-center w-full" :class="[fullscreen ? 'flex-col space-y-2' : 'justify-between']">
-              <span 
-                class="font-black" 
-                :class="[
-                  isDarkMode ? 'text-white' : 'text-slate-900',
-                  fullscreen ? 'text-4xl lg:text-6xl' : 'text-xs md:text-sm'
-                ]"
-              >
-                {{ formatPrice(commodity.price) }}
-              </span>
-              <span 
-                class="font-bold rounded-full flex items-center justify-center shadow-lg" 
-                :class="[
-                  getChangeColor(commodity.change),
-                  fullscreen ? 'text-xl lg:text-2xl px-6 py-2 gap-3' : 'text-[10px] px-1.5 py-0.5 gap-0.5'
-                ]"
-              >
-                <span>{{ getChangeIcon(commodity.change) }}</span>
-                <span>{{ commodity.change > 0 ? '+' : '' }}{{ commodity.changePercent.toFixed(2) }}%</span>
-              </span>
-            </div>
+            <!-- Commodity Avatar -->
             <div 
-              v-if="commodity.lastTradeDate" 
-              class="font-bold mt-1 leading-tight whitespace-nowrap flex items-center" 
+              class="rounded-full flex items-center justify-center text-white font-bold shadow-2xl ring-4 ring-white/20" 
               :class="[
-                isDarkMode ? 'text-slate-400' : 'text-slate-500',
-                fullscreen ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5 mb-0.5'
+                commodity.color,
+                (fullscreen || ultraWide) ? 'w-24 h-24 text-4xl mb-2' : 'w-5 h-5 md:w-5 md:h-5 text-xs',
+                { 'ultra-wide-avatar': ultraWide }
               ]"
             >
-              <span class="rounded-full animate-pulse" :class="[isDarkMode ? 'bg-green-400' : 'bg-green-500', fullscreen ? 'w-3 h-3' : 'w-1 h-1']"></span>
-              <span>As at {{ commodity.lastTradeDate }}</span>
+              <span v-if="isEmojiAvatar(commodity.avatar)">{{ commodity.avatar }}</span>
+              <svg v-else class="w-[70%] h-[70%]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  :d="getCommodityIconPath(commodity.avatar)"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            
+            <!-- Commodity Info -->
+            <div class="flex flex-col flex-1 w-full" :class="(fullscreen || ultraWide) ? 'items-center' : ''">
+              <div class="flex items-center mb-1 w-full" :class="[(fullscreen || ultraWide) ? 'flex-col mb-2 space-y-1' : 'justify-between mb-0.5']">
+                <span 
+                  class="font-black leading-tight" 
+                  :class="[
+                    (isDarkMode || ultraWide) ? 'text-white' : 'text-slate-900',
+                    (fullscreen || ultraWide) ? 'text-2xl lg:text-3xl' : 'text-[10px] md:text-xs',
+                    { 'ultra-wide-text-large': ultraWide }
+                  ]"
+                >
+                  {{ commodity.name }}
+                </span>
+                <span 
+                  class="font-mono px-3 py-1 rounded-xl shadow-inner" 
+                  :class="[
+                    (isDarkMode || ultraWide) ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-100',
+                    (fullscreen || ultraWide) ? 'text-lg lg:text-xl' : 'text-[9px] hidden md:inline',
+                    { 'ultra-wide-text-mono': ultraWide }
+                  ]"
+                >
+                  {{ commodity.symbol }}
+                </span>
+              </div>
+              <div class="flex items-center w-full" :class="[(fullscreen || ultraWide) ? 'flex-col space-y-2' : 'justify-between']">
+                <span 
+                  class="font-black" 
+                  :class="[
+                    (isDarkMode || ultraWide) ? (ultraWide ? 'text-[#00ff88]' : 'text-white') : 'text-slate-900',
+                    (fullscreen || ultraWide) ? 'text-4xl lg:text-6xl' : 'text-xs md:text-sm',
+                    { 'ultra-wide-text-xl': ultraWide }
+                  ]"
+                >
+                  {{ formatPrice(commodity.price) }}
+                </span>
+                <span 
+                  class="font-bold rounded-full flex items-center justify-center shadow-lg" 
+                  :class="[
+                    getChangeColor(commodity.change),
+                    (fullscreen || ultraWide) ? 'text-xl lg:text-2xl px-6 py-2 gap-3' : 'text-[10px] px-1.5 py-0.5 gap-0.5',
+                    { 'ultra-wide-change': ultraWide }
+                  ]"
+                >
+                  <span>{{ getChangeIcon(commodity.change) }}</span>
+                  <span>{{ commodity.change > 0 ? '+' : '' }}{{ commodity.changePercent.toFixed(2) }}%</span>
+                </span>
+              </div>
+              <div 
+                v-if="commodity.lastTradeDate" 
+                class="font-bold mt-1 leading-tight whitespace-nowrap flex items-center" 
+                :class="[
+                  (isDarkMode || ultraWide) ? (ultraWide ? 'text-[#aaffee]' : 'text-slate-400') : 'text-slate-500',
+                  (fullscreen || ultraWide) ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5 mb-0.5',
+                  { 'ultra-wide-text-date': ultraWide }
+                ]"
+              >
+                <span class="rounded-full animate-pulse" :class="[(isDarkMode || ultraWide) ? 'bg-green-400' : 'bg-green-500', (fullscreen || ultraWide) ? 'w-3 h-3' : 'w-1 h-1']"></span>
+                <span>As at {{ commodity.lastTradeDate }}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Third set for even more seamless loop -->
-        <div 
-          v-for="commodity in commodities" 
-          :key="`triplicate-${commodity.symbol}`"
-          class="flex flex-shrink-0 group cursor-pointer transition-all duration-200 backdrop-blur-md shadow-2xl"
-          :class="[
-            isDarkMode 
-              ? 'hover:bg-slate-800/90 border-slate-700/50 bg-slate-900/90' 
-              : 'hover:bg-slate-50/90 border-slate-200/50 bg-white/90',
-            fullscreen 
-              ? 'flex-col p-10 space-y-6 min-w-[350px] lg:min-w-[400px] xl:min-w-[20vw] items-center text-center rounded-[2.5rem] border-4 backdrop-blur-none shadow-lg' 
-              : 'flex-row px-2 py-2.5 space-x-1.5 md:space-x-2 items-center rounded-xl border'
-          ]"
-        >
-          <!-- Commodity Avatar -->
+          <!-- Set 3 -->
           <div 
-            class="rounded-full flex items-center justify-center text-white font-bold shadow-2xl ring-4 ring-white/20" 
+            v-for="commodity in commodities" 
+            :key="`triplicate-${commodity.symbol}`"
+            class="flex flex-shrink-0 group cursor-pointer transition-all duration-200"
             :class="[
-              commodity.color,
-              fullscreen ? 'w-24 h-24 text-4xl mb-2' : 'w-5 h-5 md:w-5 md:h-5 text-xs'
+              !ultraWide ? 'backdrop-blur-md shadow-2xl' : '',
+              (isDarkMode || ultraWide) 
+                ? (ultraWide ? '' : 'hover:bg-slate-800/90 border-slate-700/50 bg-slate-900/90') 
+                : (ultraWide ? '' : 'hover:bg-slate-50/90 border-slate-200/50 bg-white/90'),
+              (fullscreen || ultraWide) 
+                ? 'flex-col p-8 space-y-4 min-w-[350px] lg:min-w-[400px] xl:min-w-[20vw] items-center text-center rounded-[2.5rem] border-4 backdrop-blur-none shadow-lg' 
+                : 'flex-row px-2 py-2.5 space-x-1 min-w-[100px] items-center rounded-xl border',
+              { 'ultra-wide-item': ultraWide }
             ]"
           >
-            <span v-if="isEmojiAvatar(commodity.avatar)">{{ commodity.avatar }}</span>
-            <svg v-else class="w-[70%] h-[70%]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                :d="getCommodityIconPath(commodity.avatar)"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
-          
-          <!-- Commodity Info -->
-          <div class="flex flex-col flex-1 w-full" :class="fullscreen ? 'items-center' : ''">
-            <div class="flex items-center mb-1 w-full" :class="[fullscreen ? 'flex-col mb-2 space-y-1' : 'justify-between mb-0.5']">
-              <span 
-                class="font-black leading-tight" 
-                :class="[
-                  isDarkMode ? 'text-white' : 'text-slate-900',
-                  fullscreen ? 'text-2xl lg:text-3xl' : 'text-[10px] md:text-xs'
-                ]"
-              >
-                {{ commodity.name }}
-              </span>
-              <span 
-                class="font-mono px-3 py-1 rounded-xl shadow-inner" 
-                :class="[
-                  isDarkMode ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-100',
-                  fullscreen ? 'text-lg lg:text-xl' : 'text-[9px] hidden md:inline'
-                ]"
-              >
-                {{ commodity.symbol }}
-              </span>
-            </div>
-            <div class="flex items-center w-full" :class="[fullscreen ? 'flex-col space-y-2' : 'justify-between']">
-              <span 
-                class="font-black" 
-                :class="[
-                  isDarkMode ? 'text-white' : 'text-slate-900',
-                  fullscreen ? 'text-4xl lg:text-6xl' : 'text-xs md:text-sm'
-                ]"
-              >
-                {{ formatPrice(commodity.price) }}
-              </span>
-              <span 
-                class="font-bold rounded-full flex items-center justify-center shadow-lg" 
-                :class="[
-                  getChangeColor(commodity.change),
-                  fullscreen ? 'text-2xl lg:text-3xl px-6 py-2 gap-3' : 'text-[10px] px-1.5 py-0.5 gap-0.5'
-                ]"
-              >
-                <span>{{ getChangeIcon(commodity.change) }}</span>
-                <span>{{ commodity.change > 0 ? '+' : '' }}{{ commodity.changePercent.toFixed(2) }}%</span>
-              </span>
-            </div>
+            <!-- Commodity Avatar -->
             <div 
-              v-if="commodity.lastTradeDate" 
-              class="font-bold mt-1 leading-tight whitespace-nowrap flex items-center" 
+              class="rounded-full flex items-center justify-center text-white font-bold shadow-2xl ring-4 ring-white/20" 
               :class="[
-                isDarkMode ? 'text-slate-400' : 'text-slate-500',
-                fullscreen ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5 mb-0.5'
+                commodity.color,
+                (fullscreen || ultraWide) ? 'w-24 h-24 text-4xl mb-2' : 'w-5 h-5 md:w-5 md:h-5 text-xs',
+                { 'ultra-wide-avatar': ultraWide }
               ]"
             >
-              <span class="rounded-full animate-pulse" :class="[isDarkMode ? 'bg-green-400' : 'bg-green-500', fullscreen ? 'w-3 h-3' : 'w-1 h-1']"></span>
-              <span>As at {{ commodity.lastTradeDate }}</span>
+              <span v-if="isEmojiAvatar(commodity.avatar)">{{ commodity.avatar }}</span>
+              <svg v-else class="w-[70%] h-[70%]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  :d="getCommodityIconPath(commodity.avatar)"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            
+            <!-- Commodity Info -->
+            <div class="flex flex-col flex-1 w-full" :class="(fullscreen || ultraWide) ? 'items-center' : ''">
+              <div class="flex items-center mb-1 w-full" :class="[(fullscreen || ultraWide) ? 'flex-col mb-2 space-y-1' : 'justify-between mb-0.5']">
+                <span 
+                  class="font-black leading-tight" 
+                  :class="[
+                    (isDarkMode || ultraWide) ? 'text-white' : 'text-slate-900',
+                    (fullscreen || ultraWide) ? 'text-2xl lg:text-3xl' : 'text-[10px] md:text-xs',
+                    { 'ultra-wide-text-large': ultraWide }
+                  ]"
+                >
+                  {{ commodity.name }}
+                </span>
+                <span 
+                  class="font-mono px-3 py-1 rounded-xl shadow-inner" 
+                  :class="[
+                    (isDarkMode || ultraWide) ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-100',
+                    (fullscreen || ultraWide) ? 'text-lg lg:text-xl' : 'text-[9px] hidden md:inline',
+                    { 'ultra-wide-text-mono': ultraWide }
+                  ]"
+                >
+                  {{ commodity.symbol }}
+                </span>
+              </div>
+              <div class="flex items-center w-full" :class="[(fullscreen || ultraWide) ? 'flex-col space-y-2' : 'justify-between']">
+                <span 
+                  class="font-black" 
+                  :class="[
+                    (isDarkMode || ultraWide) ? (ultraWide ? 'text-[#00ff88]' : 'text-white') : 'text-slate-900',
+                    (fullscreen || ultraWide) ? 'text-4xl lg:text-6xl' : 'text-xs md:text-sm',
+                    { 'ultra-wide-text-xl': ultraWide }
+                  ]"
+                >
+                  {{ formatPrice(commodity.price) }}
+                </span>
+                <span 
+                  class="font-bold rounded-full flex items-center justify-center shadow-lg" 
+                  :class="[
+                    getChangeColor(commodity.change),
+                    (fullscreen || ultraWide) ? 'text-xl lg:text-2xl px-6 py-2 gap-3' : 'text-[10px] px-1.5 py-0.5 gap-0.5',
+                    { 'ultra-wide-change': ultraWide }
+                  ]"
+                >
+                  <span>{{ getChangeIcon(commodity.change) }}</span>
+                  <span>{{ commodity.change > 0 ? '+' : '' }}{{ commodity.changePercent.toFixed(2) }}%</span>
+                </span>
+              </div>
+              <div 
+                v-if="commodity.lastTradeDate" 
+                class="font-bold mt-1 leading-tight whitespace-nowrap flex items-center" 
+                :class="[
+                  (isDarkMode || ultraWide) ? (ultraWide ? 'text-[#aaffee]' : 'text-slate-400') : 'text-slate-500',
+                  (fullscreen || ultraWide) ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5 mb-0.5',
+                  { 'ultra-wide-text-date': ultraWide }
+                ]"
+              >
+                <span class="rounded-full animate-pulse" :class="[(isDarkMode || ultraWide) ? 'bg-green-400' : 'bg-green-500', (fullscreen || ultraWide) ? 'w-3 h-3' : 'w-1 h-1']"></span>
+                <span>As at {{ commodity.lastTradeDate }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -631,10 +598,10 @@ onUnmounted(() => {
       <div v-if="!isBrowserFullscreen" class="absolute right-6 top-1/2 transform -translate-y-1/2 z-20 flex flex-col space-y-4">
         <!-- Fullscreen Toggle -->
         <button 
-          v-if="fullscreen"
+          v-if="fullscreen || ultraWide"
           @click="toggleFullscreen"
           class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-2xl hover:scale-110 active:scale-95"
-          :class="isDarkMode ? 'bg-slate-800 text-white border border-slate-700' : 'bg-white text-slate-900 border border-slate-200'"
+          :class="(isDarkMode || ultraWide) ? 'bg-slate-800 text-white border border-slate-700' : 'bg-white text-slate-900 border border-slate-200'"
           title="Toggle Fullscreen"
         >
           <svg v-if="!isBrowserFullscreen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -647,13 +614,13 @@ onUnmounted(() => {
 
         <!-- Theme Toggle -->
         <button 
-          v-if="fullscreen"
+          v-if="fullscreen || ultraWide"
           @click="toggleDarkMode"
           class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-2xl hover:scale-110 active:scale-95"
-          :class="isDarkMode ? 'bg-yellow-500 text-slate-900' : 'bg-slate-900 text-yellow-500'"
+          :class="(isDarkMode || ultraWide) ? 'bg-yellow-500 text-slate-900' : 'bg-slate-900 text-yellow-500'"
           title="Toggle Theme"
         >
-          <svg v-if="isDarkMode" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-if="isDarkMode || ultraWide" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707-.707M12 5a7 7 0 100 14 7 7 0 000-14z" />
           </svg>
           <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -668,7 +635,7 @@ onUnmounted(() => {
           class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-2xl disabled:opacity-50 hover:scale-110 active:scale-95"
           :class="isLoading 
             ? 'bg-blue-500 animate-pulse' 
-            : (isDarkMode 
+            : ((isDarkMode || ultraWide) 
               ? 'bg-green-600 hover:bg-green-500 text-white' 
               : 'bg-green-500 hover:bg-green-600 text-white')"
           :title="isLoading ? 'Refreshing...' : 'Refresh data'"
@@ -711,6 +678,77 @@ onUnmounted(() => {
 
 .ticker-scroll-fullscreen {
   animation: ticker-scroll 135s linear infinite;
+}
+
+/* Ultra-wide support */
+.ultra-wide-viewport {
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+}
+
+.ultra-wide-scaler {
+  width: 600vw;
+  height: 100vh;
+  transform: scaleX(0.16667);
+  transform-origin: left center;
+  display: flex;
+  align-items: center;
+}
+
+.ultra-wide-track {
+  animation: ticker-scroll 90s linear infinite !important;
+}
+
+.ultra-wide-item {
+  min-width: 2100px !important; /* 350px * 6 */
+  padding: 48px !important; /* 8px * 6 */
+  margin-right: 48px !important; /* 8px * 6 */
+  border-radius: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  flex-direction: row !important; /* Force horizontal for ultra-wide */
+  space-x: 36px !important; /* 6px * 6 */
+}
+
+.ultra-wide-avatar {
+  width: 144px !important; /* 24px * 6 */
+  height: 144px !important; /* 24px * 6 */
+  font-size: 84px !important; /* Scaled for visibility */
+  ring-width: 24px !important;
+}
+
+.ultra-wide-text-large {
+  font-size: 144px !important; /* 24px * 6 */
+}
+
+.ultra-wide-text-mono {
+  font-size: 90px !important; /* 15px * 6 */
+  padding: 6px 48px !important;
+  border-radius: 60px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #ffaa00 !important; /* Symbol forced to Gold */
+}
+
+.ultra-wide-text-xl {
+  font-size: 192px !important; /* 32px * 6 */
+}
+
+.ultra-wide-change {
+  font-size: 108px !important; /* 18px * 6 */
+  padding: 12px 60px !important;
+  gap: 18px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.ultra-wide-text-date {
+  font-size: 90px !important; /* 15px * 6 */
+  margin-top: 24px !important;
+  gap: 18px !important;
 }
 
 /* Smooth hover effects */

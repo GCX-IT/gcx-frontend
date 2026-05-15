@@ -4,6 +4,6 @@ import TradingViewTicker from '../components/Landing/TradingViewTicker.vue'
 
 <template>
   <div class="min-h-screen w-full overflow-hidden">
-    <TradingViewTicker fullscreen />
+    <TradingViewTicker ultraWide />
   </div>
 </template>
