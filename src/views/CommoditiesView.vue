@@ -1,13 +1,17 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n'
 import { isDarkMode } from '../utils/darkMode'
 import { viewFile } from '../services/fileService'
 import Footer from '../components/Footer.vue'
 import CommoditySlider from '../components/Common/CommoditySlider.vue'
+import CommodityMarketPanel from '../components/Commodities/CommodityMarketPanel.vue'
 import commoditiesService, { type CommodityData } from '../services/commoditiesService'
+import { tabKeyToReferenceCommodity } from '../data/gcxReferenceMarkets'
 
 const { t } = useI18n()
+const router = useRouter()
 
 // Image loading state
 const commodityBgLoaded = ref(false)
@@ -30,15 +34,10 @@ const commodityData = ref<Record<string, CommodityData>>({})
 const activeCommodity = computed(() => commodityData.value[activeTab.value])
 const commodityTabs = computed(() => Object.keys(commodityData.value))
 
-// Functions
-const formatPrice = (price: number) => {
-  return `GHS ${price.toLocaleString()}`
-}
+const referenceCommodityKey = computed(() => tabKeyToReferenceCommodity(activeTab.value))
 
-const getPriceChangeColor = (change: number) => {
-  if (change > 0) return 'text-green-600 dark:text-green-400'
-  if (change < 0) return 'text-red-600 dark:text-red-400'
-  return 'text-gray-600 dark:text-gray-400'
+const goToContact = () => {
+  router.push('/contact')
 }
 
 const handleImageError = (event: Event) => {
@@ -113,9 +112,9 @@ const loadCommodityData = async () => {
       }
     }
     
-    console.log('✅ Commodity data loaded successfully:', Object.keys(commodityData.value))
+    console.log('âœ… Commodity data loaded successfully:', Object.keys(commodityData.value))
   } catch (err) {
-    console.error('❌ Error loading commodity data:', err)
+    console.error('âŒ Error loading commodity data:', err)
     error.value = 'Failed to load commodity data. Please try again later.'
   } finally {
     loading.value = false
@@ -196,7 +195,7 @@ onMounted(() => {
         <!-- Error State -->
         <div v-else-if="error" class="text-center py-20">
           <div class="max-w-md mx-auto">
-            <div class="text-red-500 text-6xl mb-4">⚠️</div>
+            <div class="text-red-500 text-6xl mb-4">âš ï¸</div>
             <h3 class="text-xl font-bold mb-2" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
               Failed to Load Data
             </h3>
@@ -307,80 +306,41 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Price Data -->
+          <!-- Market data -->
           <div class="space-y-8">
-            <!-- Current Prices Header -->
-            <div class="text-center">
-              <h4 class="text-3xl font-bold mb-2" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
-                Current Prices (T+1)
-              </h4>
-              <p class="text-lg" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">
-                Live commodity prices for {{ activeCommodity.name }}
-              </p>
-            </div>
+            <CommodityMarketPanel
+              v-if="referenceCommodityKey"
+              :key="referenceCommodityKey"
+              :commodity-key="referenceCommodityKey"
+            />
 
-            <!-- Contracts Table -->
-            <div class="rounded-2xl shadow-2xl overflow-hidden" :class="isDarkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'">
-              <div class="p-6">
-                <h5 class="text-xl font-bold mb-6" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
-                  Active Contracts
-                </h5>
-                
-                <div class="overflow-x-auto">
-                  <table class="w-full">
-                    <thead class="border-b" :class="isDarkMode ? 'border-slate-600' : 'border-gray-200'">
-                      <tr>
-                        <th class="text-left py-3 px-2 font-semibold" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Contract Code</th>
-                        <th class="text-right py-3 px-2 font-semibold" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Closing Price (GHS)</th>
-                        <th class="text-right py-3 px-2 font-semibold" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Change</th>
-                        <th class="text-right py-3 px-2 font-semibold" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Delivery Centre</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y" :class="isDarkMode ? 'divide-slate-600' : 'divide-gray-200'">
-                      <tr v-for="contract in activeCommodity.contracts" :key="contract.code" class="hover:bg-opacity-50 transition-colors" :class="isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-slate-50'">
-                        <td class="py-4 px-2">
-                          <span class="font-mono font-semibold px-3 py-1 rounded-lg text-sm" :class="isDarkMode ? 'bg-slate-700 text-yellow-400' : 'bg-gray-100 text-slate-800'">
-                            {{ contract.code }}
-                          </span>
-                        </td>
-                        <td class="py-4 px-2 text-right">
-                          <span class="text-lg font-bold" :class="isDarkMode ? 'text-white' : 'text-slate-900'">
-                            {{ formatPrice(contract.price) }}
-                          </span>
-                        </td>
-                        <td class="py-4 px-2 text-right">
-                          <div class="flex items-center justify-end gap-1">
-                            <svg v-if="contract.change > 0" class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17l9.2-9.2M17 17V7H7" />
-                            </svg>
-                            <svg v-else-if="contract.change < 0" class="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 7l-9.2 9.2M7 7v10h10" />
-                            </svg>
-                            <span class="font-semibold" :class="getPriceChangeColor(contract.change)">
-                              {{ contract.change >= 0 ? '+' : '' }}{{ contract.change }}
-                            </span>
-                          </div>
-                        </td>
-                        <td class="py-4 px-2 text-right">
-                          <span class="font-medium" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
-                            {{ contract.deliveryCentre }}
-                          </span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            <!-- Trading Actions -->
-            <div class="grid grid-cols-1 gap-4">
-              <button @click="viewMarketData" class="border-2 border-yellow-500 text-yellow-600 hover:bg-yellow-500 hover:text-black font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-center">
+              <button
+                type="button"
+                @click="viewMarketData"
+                class="border-2 border-yellow-500 text-yellow-600 hover:bg-yellow-500 hover:text-black font-semibold py-3 px-5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
                 View Market Data
               </button>
+              <div
+                class="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 rounded-xl px-4 py-3 border"
+                :class="isDarkMode ? 'border-slate-600 bg-slate-800/50' : 'border-slate-200 bg-slate-50'"
+              >
+                <span class="text-sm" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
+                  Need more information?
+                </span>
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center gap-1.5 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold py-2 px-4 rounded-lg transition-colors text-sm whitespace-nowrap"
+                  @click="goToContact"
+                >
+                  Contact Us
+                </button>
+              </div>
             </div>
 
             <!-- Market Status -->

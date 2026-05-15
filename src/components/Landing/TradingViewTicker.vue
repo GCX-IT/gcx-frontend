@@ -255,14 +255,14 @@ const tickerWrapperClasses = computed(() => {
     'duration-500',
     'ease-in-out',
     'shadow-lg',
-    isVisible.value ? 'top-0' : '-top-14',
+    isVisible.value ? 'top-0' : '-top-16',
     isDarkMode.value
       ? 'bg-gradient-to-r from-slate-900 via-slate-900 to-slate-800 border-b border-slate-700/50'
       : 'bg-gradient-to-r from-white via-slate-50 to-white border-b border-slate-200/50'
   ]
 })
 
-const tickerTrackHeightClass = computed(() => (props.fullscreen ? 'h-screen' : 'h-14 md:h-14'))
+const tickerTrackHeightClass = computed(() => (props.fullscreen ? 'h-screen' : 'h-16 md:h-16'))
 
 // Pause scrolling on hover
 const pauseScrolling = () => {
@@ -364,7 +364,7 @@ onUnmounted(() => {
               : 'hover:bg-slate-50/90 border-slate-200/50 bg-white/90',
             fullscreen 
               ? 'flex-col p-8 space-y-4 min-w-[350px] lg:min-w-[400px] xl:min-w-[20vw] items-center text-center rounded-[2.5rem] border-4 backdrop-blur-none shadow-lg' 
-              : 'flex-row px-2 py-0.5 space-x-1 min-w-[100px] items-center rounded-xl border'
+              : 'flex-row px-2 py-2.5 space-x-1 min-w-[100px] items-center rounded-xl border'
           ]"
         >
           <!-- Commodity Avatar -->
@@ -435,7 +435,7 @@ onUnmounted(() => {
               class="font-bold mt-1 leading-tight whitespace-nowrap flex items-center" 
               :class="[
                 isDarkMode ? 'text-slate-400' : 'text-slate-500',
-                fullscreen ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5'
+                fullscreen ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5 mb-0.5'
               ]"
             >
               <span class="rounded-full animate-pulse" :class="[isDarkMode ? 'bg-green-400' : 'bg-green-500', fullscreen ? 'w-3 h-3' : 'w-1 h-1']"></span>
@@ -455,7 +455,7 @@ onUnmounted(() => {
               : 'hover:bg-slate-50/90 border-slate-200/50 bg-white/90',
             fullscreen 
               ? 'flex-col p-10 space-y-6 min-w-[350px] lg:min-w-[400px] xl:min-w-[20vw] items-center text-center rounded-[2.5rem] border-4 backdrop-blur-none shadow-lg' 
-              : 'flex-row px-2 py-1 space-x-1.5 md:space-x-2 items-center rounded-xl border'
+              : 'flex-row px-2 py-2.5 space-x-1.5 md:space-x-2 items-center rounded-xl border'
           ]"
         >
           <!-- Commodity Avatar -->
@@ -526,7 +526,7 @@ onUnmounted(() => {
               class="font-bold mt-1 leading-tight whitespace-nowrap flex items-center" 
               :class="[
                 isDarkMode ? 'text-slate-400' : 'text-slate-500',
-                fullscreen ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5'
+                fullscreen ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5 mb-0.5'
               ]"
             >
               <span class="rounded-full animate-pulse" :class="[isDarkMode ? 'bg-green-400' : 'bg-green-500', fullscreen ? 'w-3 h-3' : 'w-1 h-1']"></span>
@@ -546,7 +546,7 @@ onUnmounted(() => {
               : 'hover:bg-slate-50/90 border-slate-200/50 bg-white/90',
             fullscreen 
               ? 'flex-col p-10 space-y-6 min-w-[350px] lg:min-w-[400px] xl:min-w-[20vw] items-center text-center rounded-[2.5rem] border-4 backdrop-blur-none shadow-lg' 
-              : 'flex-row px-2 py-1 space-x-1.5 md:space-x-2 items-center rounded-xl border'
+              : 'flex-row px-2 py-2.5 space-x-1.5 md:space-x-2 items-center rounded-xl border'
           ]"
         >
           <!-- Commodity Avatar -->
@@ -617,7 +617,7 @@ onUnmounted(() => {
               class="font-bold mt-1 leading-tight whitespace-nowrap flex items-center" 
               :class="[
                 isDarkMode ? 'text-slate-400' : 'text-slate-500',
-                fullscreen ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5'
+                fullscreen ? 'text-lg lg:text-xl gap-3 mt-4' : 'text-[8px] gap-0.5 mt-0.5 mb-0.5'
               ]"
             >
               <span class="rounded-full animate-pulse" :class="[isDarkMode ? 'bg-green-400' : 'bg-green-500', fullscreen ? 'w-3 h-3' : 'w-1 h-1']"></span>
