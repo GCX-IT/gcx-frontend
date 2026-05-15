@@ -595,7 +595,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Refresh Button -->
-      <div v-if="!isBrowserFullscreen" class="absolute right-6 top-1/2 transform -translate-y-1/2 z-20 flex flex-col space-y-4">
+      <div v-if="!isBrowserFullscreen" class="absolute right-6 top-1/2 transform -translate-y-1/2 z-20 flex flex-col space-y-4" :class="{ 'ultra-wide-buttons': ultraWide }">
         <!-- Fullscreen Toggle -->
         <button 
           v-if="fullscreen || ultraWide"
@@ -697,7 +697,7 @@ onUnmounted(() => {
 }
 
 .ultra-wide-track {
-  animation: ticker-scroll 90s linear infinite !important;
+  animation: ticker-scroll 240s linear infinite !important; /* Slowed down significantly */
 }
 
 .ultra-wide-item {
@@ -711,6 +711,9 @@ onUnmounted(() => {
   backdrop-filter: none !important;
   flex-direction: row !important; /* Force horizontal for ultra-wide */
   space-x: 36px !important; /* 6px * 6 */
+  font-family: 'JetBrains Mono', monospace !important; /* Sharper font */
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
 }
 
 .ultra-wide-avatar {
@@ -749,6 +752,24 @@ onUnmounted(() => {
   font-size: 90px !important; /* 15px * 6 */
   margin-top: 24px !important;
   gap: 18px !important;
+}
+
+.ultra-wide-buttons {
+  transform: scaleX(0.16667) !important;
+  transform-origin: right center !important;
+  width: 600px !important; /* Scaled width */
+  right: 144px !important; /* 24px * 6 */
+  gap: 48px !important; /* 8px * 6 */
+}
+
+.ultra-wide-buttons button {
+  width: 144px !important; /* 24px * 6 */
+  height: 144px !important; /* 24px * 6 */
+}
+
+.ultra-wide-buttons svg {
+  width: 72px !important; /* 12px * 6 */
+  height: 72px !important; /* 12px * 6 */
 }
 
 /* Smooth hover effects */
