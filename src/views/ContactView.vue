@@ -542,8 +542,8 @@ const initLeafletMap = () => {
               <div>
                 <h3 class="font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-slate-900'">Phone</h3>
                 <p class="transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
-                  <a href="tel:+233594164464" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
-                    +233 59 416 4464
+                  <a href="tel:+233594164465" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
+                    +233 59 416 4465
                   </a>
                 </p>
               </div>
