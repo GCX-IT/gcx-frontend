@@ -54,6 +54,7 @@ export interface CommodityVarietyTab {
   label: string
   priceKey: PriceFieldKey
   tableTitle: string
+  deliveryCentres?: string[]
 }
 
 export interface CommodityMarketConfig {
@@ -61,14 +62,56 @@ export interface CommodityMarketConfig {
   varieties: CommodityVarietyTab[] | null
   singlePriceKey: PriceFieldKey | null
   singleTableTitle: string | null
+  deliveryCentres?: string[]
 }
+
+const MAIZE_AND_SOYA_DELIVERY_CENTRES = [
+  'Ejura',
+  'Wenchi',
+  'Wa',
+  'Kintampo',
+  'Tamale',
+  'Sandema',
+  'Bolgatanga',
+  'Kumasi',
+  'Tumu',
+]
+
+const SESAME_DELIVERY_CENTRES = [
+  'Tamale',
+  'Wa',
+  'Sandema',
+]
+
+const RICE_DELIVERY_CENTRES = [
+  'Juaben',
+  'Bolgatanga',
+]
+
+const SORGHUM_DELIVERY_CENTRES = [
+  'Kumasi',
+  'Tamale',
+  'Wa',
+]
 
 export const COMMODITY_MARKET_CONFIG: Record<ReferenceCommodityKey, CommodityMarketConfig> = {
   maize: {
     title: 'Maize Market',
     varieties: [
-      { id: 'white', label: 'White Maize Market', priceKey: 'whiteMaizeGhsMt', tableTitle: 'White Maize by location' },
-      { id: 'yellow', label: 'Yellow Maize Market', priceKey: 'yellowMaizeGhsMt', tableTitle: 'Yellow Maize by location' },
+      {
+        id: 'white',
+        label: 'White Maize Market',
+        priceKey: 'whiteMaizeGhsMt',
+        tableTitle: 'White Maize by location',
+        deliveryCentres: MAIZE_AND_SOYA_DELIVERY_CENTRES,
+      },
+      {
+        id: 'yellow',
+        label: 'Yellow Maize Market',
+        priceKey: 'yellowMaizeGhsMt',
+        tableTitle: 'Yellow Maize by location',
+        deliveryCentres: MAIZE_AND_SOYA_DELIVERY_CENTRES,
+      },
     ],
     singlePriceKey: null,
     singleTableTitle: null,
@@ -78,24 +121,28 @@ export const COMMODITY_MARKET_CONFIG: Record<ReferenceCommodityKey, CommodityMar
     varieties: null,
     singlePriceKey: 'riceGhsMt',
     singleTableTitle: 'Rice by location',
+    deliveryCentres: RICE_DELIVERY_CENTRES,
   },
   sesame: {
     title: 'Sesame Market',
     varieties: null,
     singlePriceKey: 'sesameGhsMt',
     singleTableTitle: 'Sesame by location',
+    deliveryCentres: SESAME_DELIVERY_CENTRES,
   },
   sorghum: {
     title: 'Sorghum Market',
     varieties: null,
     singlePriceKey: 'sorghumGhsMt',
     singleTableTitle: 'Sorghum by location',
+    deliveryCentres: SORGHUM_DELIVERY_CENTRES,
   },
   soyabean: {
     title: 'Soya Bean Market',
     varieties: null,
     singlePriceKey: 'soyaGhsMt',
     singleTableTitle: 'Soya Bean by location',
+    deliveryCentres: MAIZE_AND_SOYA_DELIVERY_CENTRES,
   },
 }
 
@@ -112,7 +159,20 @@ export function tabKeyToReferenceCommodity(tabKey: string): ReferenceCommodityKe
   return map[tabKey] ?? null
 }
 
-export function getMarketRowsByPriceKey(priceKey: PriceFieldKey): CommodityMarketLocationRow[] {
+export function getMarketRowsByPriceKey(priceKey: PriceFieldKey, deliveryCentres?: string[]): CommodityMarketLocationRow[] {
+  if (deliveryCentres?.length) {
+    const marketLookup = new Set(
+      GCX_REFERENCE_MARKETS.filter((row) => row[priceKey] != null).map((row) => row.market),
+    )
+
+    return deliveryCentres
+      .filter((market) => marketLookup.has(market) || GCX_REFERENCE_MARKETS.some((row) => row.market === market))
+      .map((market) => ({
+        deliveryCentre: market,
+        volumeTradedMt: null,
+      }))
+  }
+
   return GCX_REFERENCE_MARKETS.filter((row) => row[priceKey] != null).map((row) => ({
     deliveryCentre: row.market,
     volumeTradedMt: null,

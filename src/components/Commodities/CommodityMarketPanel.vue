@@ -24,10 +24,10 @@ const activeVariety = computed(() =>
 
 const marketRows = computed(() => {
   if (hasVarieties.value && activeVariety.value) {
-    return getMarketRowsByPriceKey(activeVariety.value.priceKey)
+    return getMarketRowsByPriceKey(activeVariety.value.priceKey, activeVariety.value.deliveryCentres)
   }
   if (config.value.singlePriceKey) {
-    return getMarketRowsByPriceKey(config.value.singlePriceKey)
+    return getMarketRowsByPriceKey(config.value.singlePriceKey, config.value.deliveryCentres)
   }
   return []
 })

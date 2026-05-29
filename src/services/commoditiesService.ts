@@ -4,6 +4,8 @@ import { marketDataService, type ProcessedMarketData } from './marketDataService
 // S3 bucket configuration
 const S3_BUCKET_URL = 'https://gcxwebsite.s3.eu-north-1.amazonaws.com'
 const S3_CONTRACTS_PREFIX = 'contracts'
+const STANDARD_TRADING_HOURS = 'Monday-Friday 9:00 AM - 3:00 PM (GMT, Accra)'
+const STANDARD_DELIVERY_MONTHS = 'January to December'
 
 // Types for CMS commodity data
 export interface CMSCommodity {
@@ -177,8 +179,8 @@ class CommoditiesService {
           })),
           specifications: {
             contractSize: cmsCommodity.contract_size,
-            tradingHours: cmsCommodity.trading_hours,
-            deliveryMonths: cmsCommodity.delivery_months,
+            tradingHours: STANDARD_TRADING_HOURS,
+            deliveryMonths: STANDARD_DELIVERY_MONTHS,
             minimumPrice: `GHS ${cmsCommodity.minimum_price.toLocaleString()} per metric ton`,
             maximumPrice: `GHS ${cmsCommodity.maximum_price.toLocaleString()} per metric ton`
           },

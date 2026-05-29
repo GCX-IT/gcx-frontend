@@ -350,7 +350,7 @@ onMounted(() => {
                 <span class="font-semibold" :class="isDarkMode ? 'text-white' : 'text-slate-900'">Market Status: Open</span>
               </div>
               <p class="text-sm" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">
-                Trading hours: 9:00 AM - 4:00 PM (GMT)
+                Trading hours: 9:00 AM - 3:00 PM (GMT, Accra)
               </p>
             </div>
             </div>
