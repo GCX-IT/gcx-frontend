@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from '../composables/useI18n'
 import { isDarkMode } from '../utils/darkMode'
 import Footer from '../components/Footer.vue'
 import { emailService, type ContactFormData } from '../services/emailService'
+import { useSiteSettings } from '../composables/useSiteSettings'
 import { 
   EnvelopeIcon, 
   PhoneIcon, 
@@ -26,6 +27,15 @@ declare global {
 }
 
 const { t } = useI18n()
+
+// Site settings (editable in CMS → Settings). Fall back to current values.
+const { get: getSetting, load: loadSettings } = useSiteSettings()
+onMounted(() => loadSettings())
+const contactAddress = computed(() => getSetting('contact_address',
+  'Ministry of Finance Complex,\nTower 1, 5th Floor\nTumu Avenue, Kanda\nAccra'))
+const contactPhone = computed(() => getSetting('contact_phone', '+233 59 416 4465'))
+const contactPhoneHref = computed(() => 'tel:' + contactPhone.value.replace(/\s+/g, ''))
+const contactEmail = computed(() => getSetting('contact_email', 'info@gcx.com.gh'))
 
 const formData = ref<ContactFormData>({
   name: '',
@@ -522,12 +532,7 @@ const initLeafletMap = () => {
               </div>
               <div>
                 <h3 class="font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-slate-900'">Office Address</h3>
-                <p class="leading-relaxed transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
-                  Ministry of Finance Complex,<br>
-                  Tower 1, 5th Floor<br>
-                  Tumu Avenue, Kanda<br>
-                  Accra
-                </p>
+                <p class="leading-relaxed whitespace-pre-line transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">{{ contactAddress }}</p>
                 <p class="text-sm mt-2 transition-colors duration-300" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">
                   Digital Address: GV-002-6511
                 </p>
@@ -542,8 +547,8 @@ const initLeafletMap = () => {
               <div>
                 <h3 class="font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-slate-900'">Phone</h3>
                 <p class="transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
-                  <a href="tel:+233594164465" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
-                    +233 59 416 4465
+                  <a :href="contactPhoneHref" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
+                    {{ contactPhone }}
                   </a>
                 </p>
               </div>
@@ -557,8 +562,8 @@ const initLeafletMap = () => {
               <div>
                 <h3 class="font-semibold mb-2 transition-colors duration-300" :class="isDarkMode ? 'text-white' : 'text-slate-900'">Email</h3>
                 <p class="transition-colors duration-300" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">
-                  <a href="mailto:info@gcx.com.gh" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
-                    info@gcx.com.gh
+                  <a :href="'mailto:' + contactEmail" class="hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">
+                    {{ contactEmail }}
                   </a>
                 </p>
               </div>
