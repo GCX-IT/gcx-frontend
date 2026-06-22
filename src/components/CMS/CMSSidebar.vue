@@ -152,6 +152,12 @@ const navigationItems = computed<NavigationItem[]>(() => [
     permissions: ['admin']
   },
   {
+    id: 'backup-manager',
+    label: 'Database Backups',
+    icon: 'pi pi-database',
+    permissions: ['admin']
+  },
+  {
     id: 'settings',
     label: 'Settings',
     icon: 'pi pi-cog',
@@ -214,6 +220,7 @@ const navigateToSection = (section: string) => {
     'rti-manager': 'cms-rti',
     'news-manager': 'cms-news',
     'users': 'cms-users',
+    'backup-manager': 'cms-backup',
     'settings': 'cms-settings'
   }
   

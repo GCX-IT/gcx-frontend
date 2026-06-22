@@ -3,44 +3,64 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { isDarkMode } from '@/utils/darkMode'
-import { getBackendURL } from '@/plugins/axios'
 
 const router = useRouter()
-const { login, isAuthenticated, error, isLoading } = useAuth()
+const { login, requestOtp, loginWithOtp, isAuthenticated, error, isLoading, clearError } = useAuth()
+
+// 'otp' (passwordless, default) or 'password'
+const mode = ref<'otp' | 'password'>('otp')
+// OTP sub-steps: 'email' -> enter address, 'code' -> enter the 6-digit code
+const otpStep = ref<'email' | 'code'>('email')
 
 const email = ref('')
+const code = ref('')
 const password = ref('')
 const showPassword = ref(false)
+const info = ref('')
 
-// Redirect if already logged in
 onMounted(() => {
-  if (isAuthenticated.value) {
-    router.push('/cms')
-  }
+  if (isAuthenticated.value) router.push('/cms')
 })
 
-const handleLogin = async () => {
-  const result = await login({
-    email: email.value,
-    password: password.value
-  })
-  
+const switchMode = (m: 'otp' | 'password') => {
+  mode.value = m
+  otpStep.value = 'email'
+  code.value = ''
+  info.value = ''
+  clearError()
+}
+
+const handlePasswordLogin = async () => {
+  const result = await login({ email: email.value, password: password.value })
+  if (result.success) router.push('/cms')
+}
+
+const handleSendCode = async () => {
+  info.value = ''
+  const result = await requestOtp(email.value)
   if (result.success) {
-    router.push('/cms')
+    otpStep.value = 'code'
+    info.value = `We sent a 6-digit code to ${email.value}. It expires in 10 minutes.`
   }
 }
 
-const handleKeypress = (event: KeyboardEvent) => {
-  if (event.key === 'Enter') {
-    handleLogin()
-  }
+const handleVerifyCode = async () => {
+  const result = await loginWithOtp(email.value, code.value)
+  if (result.success) router.push('/cms')
+}
+
+const resetToEmail = () => {
+  otpStep.value = 'email'
+  code.value = ''
+  info.value = ''
+  clearError()
 }
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center transition-colors duration-300" 
+  <div class="min-h-screen flex items-center justify-center transition-colors duration-300"
        :class="isDarkMode ? 'bg-slate-900' : 'bg-slate-50'">
-    
+
     <!-- Background decoration -->
     <div class="absolute inset-0 overflow-hidden">
       <div class="absolute -top-40 -right-32 w-80 h-80 rounded-full opacity-10"
@@ -63,99 +83,114 @@ const handleKeypress = (event: KeyboardEvent) => {
         </p>
       </div>
 
-      <!-- Login Form -->
-      <div class="rounded-xl shadow-xl p-8 border" 
+      <!-- Card -->
+      <div class="rounded-xl shadow-xl p-8 border"
            :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'">
-        
-        <!-- Error Message -->
+
+        <!-- Mode toggle -->
+        <div class="flex p-1 mb-6 rounded-lg" :class="isDarkMode ? 'bg-slate-700' : 'bg-slate-100'">
+          <button type="button" @click="switchMode('otp')"
+            class="flex-1 py-2 text-sm font-medium rounded-md transition-colors"
+            :class="mode === 'otp'
+              ? (isDarkMode ? 'bg-slate-900 text-yellow-400' : 'bg-white text-slate-900 shadow')
+              : (isDarkMode ? 'text-slate-400' : 'text-slate-500')">
+            Email code
+          </button>
+          <button type="button" @click="switchMode('password')"
+            class="flex-1 py-2 text-sm font-medium rounded-md transition-colors"
+            :class="mode === 'password'
+              ? (isDarkMode ? 'bg-slate-900 text-yellow-400' : 'bg-white text-slate-900 shadow')
+              : (isDarkMode ? 'text-slate-400' : 'text-slate-500')">
+            Password
+          </button>
+        </div>
+
+        <!-- Error -->
         <div v-if="error" class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
           <p class="text-red-700 text-sm">{{ error }}</p>
         </div>
+        <!-- Info -->
+        <div v-if="info && !error" class="mb-6 p-4 rounded-lg bg-green-50 border border-green-200">
+          <p class="text-green-700 text-sm">{{ info }}</p>
+        </div>
 
-        <form @submit.prevent="handleLogin" class="space-y-6">
-          <!-- Email Field -->
+        <!-- ============ OTP MODE ============ -->
+        <form v-if="mode === 'otp' && otpStep === 'email'" @submit.prevent="handleSendCode" class="space-y-6">
           <div>
-            <label for="email" class="block text-sm font-medium mb-2"
-                   :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
+            <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
               Email Address
             </label>
-            <input
-              id="email"
-              v-model="email"
-              type="email"
-              required
+            <input v-model="email" type="email" required placeholder="you@gcx.com.gh"
               class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors"
-              :class="isDarkMode 
-                ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' 
-                : 'bg-white border-slate-300 text-slate-900 placeholder-slate-500'"
-              placeholder="Enter your email"
-              @keypress="handleKeypress"
-            />
+              :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-500'" />
           </div>
-
-          <!-- Password Field -->
-          <div>
-            <label for="password" class="block text-sm font-medium mb-2"
-                   :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
-              Password
-            </label>
-            <div class="relative">
-              <input
-                id="password"
-                v-model="password"
-                :type="showPassword ? 'text' : 'password'"
-                required
-                class="w-full px-4 py-3 pr-12 rounded-lg border focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors"
-                :class="isDarkMode 
-                  ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' 
-                  : 'bg-white border-slate-300 text-slate-900 placeholder-slate-500'"
-                placeholder="Enter your password"
-                @keypress="handleKeypress"
-              />
-              <button
-                type="button"
-                @click="showPassword = !showPassword"
-                class="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
-              >
-                <svg v-if="!showPassword" class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <svg v-else class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Login Button -->
-          <button
-            type="submit"
-            :disabled="isLoading"
-            class="w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 text-black font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
-          >
-            <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            {{ isLoading ? 'Signing in...' : 'Sign In' }}
+          <button type="submit" :disabled="isLoading"
+            class="w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 text-black font-medium py-3 px-4 rounded-lg transition-colors">
+            {{ isLoading ? 'Sending…' : 'Send code' }}
           </button>
         </form>
 
+        <form v-else-if="mode === 'otp' && otpStep === 'code'" @submit.prevent="handleVerifyCode" class="space-y-6">
+          <div>
+            <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
+              Enter the 6-digit code
+            </label>
+            <input v-model="code" inputmode="numeric" maxlength="6" required placeholder="••••••"
+              class="w-full px-4 py-3 rounded-lg border text-center text-2xl tracking-[0.5em] focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors"
+              :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'" />
+          </div>
+          <button type="submit" :disabled="isLoading"
+            class="w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 text-black font-medium py-3 px-4 rounded-lg transition-colors">
+            {{ isLoading ? 'Verifying…' : 'Verify & sign in' }}
+          </button>
+          <div class="flex items-center justify-between text-sm">
+            <button type="button" @click="resetToEmail" class="text-yellow-600 hover:underline">
+              Change email
+            </button>
+            <button type="button" @click="handleSendCode" :disabled="isLoading" class="text-yellow-600 hover:underline">
+              Resend code
+            </button>
+          </div>
+        </form>
 
+        <!-- ============ PASSWORD MODE ============ -->
+        <form v-else @submit.prevent="handlePasswordLogin" class="space-y-6">
+          <div>
+            <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
+              Email Address
+            </label>
+            <input v-model="email" type="email" required placeholder="Enter your email"
+              class="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors"
+              :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-500'" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
+              Password
+            </label>
+            <div class="relative">
+              <input v-model="password" :type="showPassword ? 'text' : 'password'" required placeholder="Enter your password"
+                class="w-full px-4 py-3 pr-12 rounded-lg border focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors"
+                :class="isDarkMode ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-slate-300 text-slate-900 placeholder-slate-500'" />
+              <button type="button" @click="showPassword = !showPassword"
+                class="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors">
+                {{ showPassword ? 'Hide' : 'Show' }}
+              </button>
+            </div>
+          </div>
+          <button type="submit" :disabled="isLoading"
+            class="w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-300 text-black font-medium py-3 px-4 rounded-lg transition-colors">
+            {{ isLoading ? 'Signing in…' : 'Sign In' }}
+          </button>
+        </form>
 
         <!-- Access Info -->
-        <div class="mt-6 p-4 rounded-lg border" 
+        <div class="mt-6 p-4 rounded-lg border"
              :class="isDarkMode ? 'bg-slate-700 border-slate-600' : 'bg-slate-50 border-slate-200'">
-          <p class="text-xs font-medium mb-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">
-            CMS Access:
-          </p>
           <p class="text-xs" :class="isDarkMode ? 'text-slate-400' : 'text-slate-600'">
-            After login, you'll be redirected to the CMS dashboard where you can manage blog posts, media, and website content.
+            <span class="font-medium">Email code</span> sends a one-time code to your inbox — no password needed.
+            New users sign in this way.
           </p>
         </div>
-
-
       </div>
     </div>
   </div>

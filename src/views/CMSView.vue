@@ -24,6 +24,8 @@ import ImageManager from '../components/CMS/ImageManager.vue'
 import GalleryManager from '../components/CMS/GalleryManager.vue'
 import VideoManager from '../components/CMS/VideoManager.vue'
 import NewsManager from '../components/CMS/NewsManager.vue'
+import UserManager from '../components/CMS/UserManager.vue'
+import BackupManager from '../components/CMS/BackupManager.vue'
 
 // Note: user, isAuthenticated are handled by router guard
 // const { user, isAuthenticated, logout } = useAuth()
@@ -116,6 +118,12 @@ const toggleSidebar = () => {
 
           <!-- Image Manager -->
           <ImageManager v-else-if="activeSection === 'image-manager'" />
+
+          <!-- User Management -->
+          <UserManager v-else-if="activeSection === 'users'" />
+
+          <!-- Database Backups -->
+          <BackupManager v-else-if="activeSection === 'backup-manager'" />
 
           <!-- Settings Section -->
           <SettingsManager v-else-if="activeSection === 'settings'" />

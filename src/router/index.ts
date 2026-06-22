@@ -278,6 +278,12 @@ const router = createRouter({
           meta: { section: 'users' }
         },
         {
+          path: 'backup',
+          name: 'cms-backup',
+          component: () => import('../views/CMSView.vue'),
+          meta: { section: 'backup-manager' }
+        },
+        {
           path: 'settings',
           name: 'cms-settings',
           component: () => import('../views/CMSView.vue'),

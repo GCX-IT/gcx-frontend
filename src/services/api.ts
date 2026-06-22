@@ -34,6 +34,34 @@ export const authAPI = {
     
   changePassword: (data: ChangePasswordData) =>
     api.post<ApiResponse<{ message: string }>>('/api/user/change-password', data),
+
+  // Passwordless email OTP login
+  requestOtp: (email: string) =>
+    api.post<{ success: boolean; message: string }>('/api/auth/request-otp', { email }),
+
+  verifyOtp: (email: string, code: string) =>
+    api.post<{ token: string; user: User }>('/api/auth/verify-otp', { email, code }),
+}
+
+export interface BackupFile {
+  filename: string
+  size: number
+  created_at: string
+}
+
+// Database backup API (Admin only)
+export const backupAPI = {
+  list: () =>
+    api.get<BackupFile[]>('/api/admin/backups'),
+
+  create: () =>
+    api.post<BackupFile>('/api/admin/backup'),
+
+  download: (filename: string) =>
+    api.get('/api/admin/backups/download', {
+      params: { file: filename },
+      responseType: 'blob',
+    }),
 }
 
 // Blog API

@@ -123,6 +123,54 @@ export function useAuth() {
     }
   }
 
+  // Request a one-time login code by email (passwordless).
+  const requestOtp = async (email: string) => {
+    try {
+      isLoading.value = true
+      error.value = null
+      await authAPI.requestOtp(email)
+      return { success: true }
+    } catch (err: any) {
+      const message = err.response?.data?.error || 'Could not send code. Please try again.'
+      error.value = message
+      return { success: false, error: message }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Verify the emailed code and sign in.
+  const loginWithOtp = async (email: string, code: string) => {
+    try {
+      isLoading.value = true
+      error.value = null
+
+      const response = await authAPI.verifyOtp(email, code)
+      const responseData = response.data as any
+      let token: string, userData: User
+
+      if (responseData?.data?.token && responseData?.data?.user) {
+        token = responseData.data.token
+        userData = responseData.data.user
+      } else if (responseData?.token && responseData?.user) {
+        token = responseData.token
+        userData = responseData.user
+      } else {
+        throw new Error('Invalid verify response structure')
+      }
+
+      localStorage.setItem('auth_token', token)
+      user.value = userData
+      return { success: true }
+    } catch (err: any) {
+      const message = err.response?.data?.error || 'Invalid or expired code'
+      error.value = message
+      return { success: false, error: message }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // Logout
   const logout = () => {
     localStorage.removeItem('auth_token')
@@ -195,6 +243,8 @@ export function useAuth() {
     // Actions
     initializeAuth,
     login,
+    requestOtp,
+    loginWithOtp,
     register,
     logout,
     updateProfile,
